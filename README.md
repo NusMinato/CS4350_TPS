@@ -1,6 +1,10 @@
 
 # CS4350 Game Project README — Detailed Module Breakdown (10 Pillars)
 
+> ⚠️ **Note: Communication is key!**  
+> Please feel free to share any ideas in the group.  
+> Especially when changing parts owned by others, make sure to **communicate in advance** to avoid conflicts or duplicated work.
+
 This document details **ten pillars** of the project so that any contributor can pick up **two pillars** and deliver shippable work. Everything is written for `Unreal Engine 5.6.1`.
 
 - 1) Player Controls & Combat System
