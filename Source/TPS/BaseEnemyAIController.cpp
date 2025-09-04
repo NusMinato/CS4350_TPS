@@ -9,7 +9,21 @@ void ABaseEnemyAIController::BeginPlay()
 {
     Super::BeginPlay();
     
-    UE_LOG(LogTemp, Warning, TEXT("Worked?"))
     Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-    SetFocus(Player);
+}
+
+void ABaseEnemyAIController::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    if (LineOfSightTo(Player)) 
+    {
+        SetFocus(Player);
+        MoveToActor(Player, 200);
+    } 
+    else 
+    {
+        ClearFocus(EAIFocusPriority::Gameplay);
+        StopMovement();
+    }
 }
