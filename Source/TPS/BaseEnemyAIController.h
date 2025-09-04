@@ -14,13 +14,14 @@ class TPS_API ABaseEnemyAIController : public AAIController
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My Variables")
-	APawn* Player;
-
-	
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
 	virtual void BeginPlay() override;
-	
+
+private:
+	UPROPERTY(EditAnywhere, Category = "AI")
+	class UBehaviorTree* AIBehavior; 
+
+	APawn* Player;
 };
