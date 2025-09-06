@@ -1,0 +1,306 @@
+[
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\GitSourceControl.Build.cs",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitMessageLog.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlChangelist.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlChangelistState.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlChangelistState.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlCommand.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlConsole.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlConsole.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlMenu.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlModule.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlOperations.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlOperations.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlProvider.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlRevision.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlRunner.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlRunner.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlSettings.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlState.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\GitSourceControlUtils.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\SGitSourceControlSettings.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Private\\SGitSourceControlSettings.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlChangelist.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlCommand.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlMenu.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlModule.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlProvider.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlRevision.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlSettings.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlState.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\GitSourceControlUtils.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Plugins\\UEGitPlugin\\Source\\GitSourceControl\\Public\\IGitSourceControlWorker.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\GitSourceControl.46.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\BaseEnemyAIController.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\BaseEnemyAIController.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\MyClass.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\MyClass.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\TPS.Build.cs",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\TPS.cpp",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\Source\\TPS\\TPS.h",
+		"arguments": [
+			"D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+			"@D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default\\TPS.1.rsp"
+		],
+		"directory": "D:\\UE_5.6\\Engine\\Source"
+	}
+]
