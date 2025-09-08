@@ -5,7 +5,11 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "InventoryComponent.h"
+#include "../../Player/PlayerCharacter.h"
 #include "Item.generated.h"
+
+class APlayerCharacter;
+class InventoryComponent;
 
 /**
  * 
@@ -34,11 +38,11 @@ public:
 	FText ItemDescription;
 
 	UPROPERTY()
-	TObjectPtr<UInventoryComponent> OwningInventory;
+	InventoryComponent* OwningInventory;
 
-	//virtual void Use(TObjectPtr<AInventorySystemCharacter> Character) PURE_VIRTUAL(UItem, );
+	virtual void Use(APlayerCharacter* Character) PURE_VIRTUAL(UItem, );
 
-	//UFUNCTION(BlueprintImplementableEvent)
-	//void OnUse(TObjectPtr<AInventorySystemCharacter> Character);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnUse(APlayerCharacter* Character);
 
 };
