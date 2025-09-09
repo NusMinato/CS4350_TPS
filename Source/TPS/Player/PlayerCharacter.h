@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "../InventorySystem//Items/InventoryComponent.h"
+#include "../InventorySystem/Items/Item.h"
 #include "PlayerCharacter.generated.h"
 
 class UInventoryComponent;
+class UItem;
 
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
@@ -18,14 +19,21 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	UInventoryComponent* InventoryComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UInventoryComponent> Inventory; 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
-	int MaxHealth;
+	int32 MaxHealth = 100;
 
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Player Stats")
-	int currHealth;
+	int32 CurrHealth;
+
+	UFUNCTION(BlueprintCallable)
+	void UseItem(UItem* Item) {
+		Item->Use(this);
+		// blueprint event
+		Item->OnUse(this);
+	}
 
 };

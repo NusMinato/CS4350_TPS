@@ -15,6 +15,11 @@ class TPS_API UHealItem : public UItem
 {
 	GENERATED_BODY()
 
+public:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Healing Amount", meta = (ClampMin = "10"))
+	int32 HealAmount = 10;
+
 protected:
 
 	virtual void Use(APlayerCharacter* PlayerCharacter) override;

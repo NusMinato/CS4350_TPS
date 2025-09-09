@@ -4,12 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "InventoryComponent.h"
-#include "../../Player/PlayerCharacter.h"
 #include "Item.generated.h"
 
 class APlayerCharacter;
-class InventoryComponent;
+class UInventoryComponent;
 
 /**
  * 
@@ -21,6 +19,11 @@ class TPS_API UItem : public UObject
 	
 public:
 	UItem();
+
+	virtual class UWorld* GetWorld() const { return World; };
+
+	UPROPERTY(Transient)
+	class UWorld* World;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
 	FText UseActionText;
@@ -38,7 +41,7 @@ public:
 	FText ItemDescription;
 
 	UPROPERTY()
-	InventoryComponent* OwningInventory;
+	UInventoryComponent* OwningInventory;
 
 	virtual void Use(APlayerCharacter* Character) PURE_VIRTUAL(UItem, );
 

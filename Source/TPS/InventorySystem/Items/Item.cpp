@@ -3,4 +3,7 @@
 
 #include "Item.h"
 
-UItem::UItem() = default;
+UItem::UItem() {
+	this->ItemDisplayName = FText::FromString("Item");
+	this->UseActionText = FText::FromString("Use");
+}

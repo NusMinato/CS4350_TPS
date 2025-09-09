@@ -6,6 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "InventoryComponent.generated.h"
 
+class UItem;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_API UInventoryComponent : public UActorComponent
@@ -16,13 +20,24 @@ public:
 	// Sets default values for this component's properties
 	UInventoryComponent();
 
-protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	bool AddItem(UItem* Item);
+	bool RemoveItem(UItem* Item);
 
-		
+	UPROPERTY(EditDefaultsOnly, Category="Inventory")
+	TArray<TObjectPtr<UItem>> DefaultItems;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	int32 Capacity;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWorld> World;
+
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryUpdated OnInventoryUpdated;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	TArray<TObjectPtr<UItem>> Items;
 };
