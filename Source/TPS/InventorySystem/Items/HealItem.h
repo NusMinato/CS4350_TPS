@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "Item.h"
 #include "HealItem.generated.h"
 
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, EditInlineNew, DefaultToInstanced)
 class TPS_API UHealItem : public UItem
 {
 	GENERATED_BODY()

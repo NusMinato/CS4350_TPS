@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "../InventorySystem/Items/Item.h"
 #include "PlayerCharacter.generated.h"
 
 class UInventoryComponent;
@@ -30,10 +29,16 @@ public:
 	int32 CurrHealth;
 
 	UFUNCTION(BlueprintCallable)
-	void UseItem(UItem* Item) {
-		Item->Use(this);
-		// blueprint event
-		Item->OnUse(this);
+	void UseItem(UItem* Item);
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetHealth() {
+		return this->CurrHealth;
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(int32 Health) {
+		this->CurrHealth = Health;
 	}
 
 };
