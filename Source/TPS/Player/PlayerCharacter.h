@@ -24,9 +24,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
 
-
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Player Stats")
 	int32 CurrHealth;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	int32 MaxSanity = 100;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Player Stats")
+	int32 CurrSanity;
 
 	UFUNCTION(BlueprintCallable)
 	void UseItem(UItem* Item);

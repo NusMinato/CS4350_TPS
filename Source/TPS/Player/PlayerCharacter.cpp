@@ -10,6 +10,7 @@ APlayerCharacter::APlayerCharacter()
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	Inventory->Capacity = 20;
 	CurrHealth = MaxHealth;
+	CurrSanity = MaxSanity;
 }
 
 void APlayerCharacter::UseItem(UItem* Item)
