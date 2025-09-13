@@ -18,8 +18,8 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
-	TObjectPtr<UInventoryComponent> Inventory; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UInventoryComponent> Inventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;

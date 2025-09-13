@@ -7,3 +7,7 @@ UItem::UItem() {
 	this->ItemDisplayName = FText::FromString("Item");
 	this->UseActionText = FText::FromString("Use");
 }
+
+void UItem::Use(APlayerCharacter* Character)
+{
+}

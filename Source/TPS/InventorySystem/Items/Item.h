@@ -40,10 +40,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item", meta=(MultiLine = true))
 	FText ItemDescription;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	UInventoryComponent* OwningInventory;
 
-	virtual void Use(APlayerCharacter* Character) PURE_VIRTUAL(UItem, );
+	virtual void Use(APlayerCharacter* Character);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	void OnUse(APlayerCharacter* Character);

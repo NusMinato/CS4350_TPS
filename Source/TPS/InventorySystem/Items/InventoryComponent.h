@@ -26,7 +26,7 @@ public:
 	bool AddItem(UItem* Item);
 	bool RemoveItem(UItem* Item);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Inventory")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Inventory", Instanced)
 	TArray<TObjectPtr<UItem>> DefaultItems;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
@@ -38,6 +38,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "Inventory", Instanced)
 	TArray<TObjectPtr<UItem>> Items;
 };
