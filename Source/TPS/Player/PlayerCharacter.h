@@ -18,7 +18,7 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	TObjectPtr<UInventoryComponent> Inventory; 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
