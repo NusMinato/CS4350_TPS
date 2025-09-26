@@ -46,4 +46,14 @@ public:
 		this->CurrHealth = Health;
 	}
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetSanity() {
+		return this->CurrSanity;
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void SetSanity(int32 Sanity) {
+		this->CurrSanity = Sanity;
+	}
+
 };
