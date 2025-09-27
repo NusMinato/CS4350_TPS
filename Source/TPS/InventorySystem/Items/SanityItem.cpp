@@ -9,4 +9,8 @@ void USanityItem::Use(APlayerCharacter* PlayerCharacter)
 {
 	int32 Sanity = PlayerCharacter->CurrSanity + this->RestorationAmount;
 	PlayerCharacter->SetSanity(Sanity <= PlayerCharacter->MaxSanity ? Sanity : PlayerCharacter->MaxSanity);
+
+	if (this->OwningInventory) {
+		this->OwningInventory->RemoveItem(this);
+	}
 }

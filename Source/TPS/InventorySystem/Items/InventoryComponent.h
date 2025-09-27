@@ -10,6 +10,8 @@ class UItem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryAddFailed, UItem*, Item, FText, Reason);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_API UInventoryComponent : public UActorComponent
@@ -37,6 +39,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryAddFailed OnInventoryAddFailed;
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "Inventory", Instanced)
 	TArray<TObjectPtr<UItem>> Items;
