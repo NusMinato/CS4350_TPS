@@ -33,6 +33,17 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Player Stats")
 	int32 CurrSanity;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Interaction")
+	float InteractDistance = 500.f;
+
+	// Currently focused interactable item (in line of sight)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	AActor* FocusedItem;
+
+	// Function to perform interaction trace and handle results
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void Interact();
+
 	UFUNCTION(BlueprintCallable)
 	void UseItem(UItem* Item);
 
@@ -55,5 +66,8 @@ public:
 	void SetSanity(int32 Sanity) {
 		this->CurrSanity = Sanity;
 	}
+
+protected:
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 };
