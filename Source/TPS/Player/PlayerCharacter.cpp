@@ -25,6 +25,13 @@ void APlayerCharacter::UseItem(UItem* Item)
 	Item->OnUse(this);
 }
 
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+    // Assume "Interact" action mapping is bound to E in project settings:
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+}
+
 void APlayerCharacter::Interact()
 {
     // Perform a line trace from the camera
@@ -41,6 +48,7 @@ void APlayerCharacter::Interact()
         CameraLoc = GetActorLocation();
         CameraRot = GetActorRotation();
     }
+
 
     FVector TraceStart = CameraLoc;
     FVector TraceEnd = CameraLoc + (CameraRot.Vector() * InteractDistance);
