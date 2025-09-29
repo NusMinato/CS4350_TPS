@@ -24,21 +24,9 @@ void UInventoryComponent::BeginPlay()
 
 bool UInventoryComponent::AddItem(UItem* Item)
 {
-	if (!Item)
-	{
-		OnInventoryAddFailed.Broadcast(nullptr, FText::FromString(TEXT("Null item")));
+	if (Items.Num() >= Capacity || !Item) {
 		return false;
 	}
-
-	if (Items.Num() >= Capacity)
-	{
-		OnInventoryAddFailed.Broadcast(Item, FText::FromString(TEXT("Inventory is full")));
-		return false;
-	}
-
-	UItem* ItemForInv = Item->GetOuter() == this
-		? Item
-		: DuplicateObject<UItem>(Item, this);
 
 	Item->OwningInventory = this;
 	Items.Add(Item);
