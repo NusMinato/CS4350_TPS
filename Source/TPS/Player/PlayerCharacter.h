@@ -21,6 +21,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInventoryComponent> Inventory;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInventoryComponent> WeaponInventory;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
 
@@ -67,7 +70,14 @@ public:
 		this->CurrSanity = Sanity;
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Aim")
+	FVector GetLookAtPoint() const;
+
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	/** Cache so we only update UI when the focused actor changes */
+	TWeakObjectPtr<AActor> LastFocusedInteractable;
 
 };

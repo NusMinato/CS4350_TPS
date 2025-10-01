@@ -12,10 +12,10 @@
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
-	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-	Inventory->Capacity = 20;
-	CurrHealth = MaxHealth;
-	CurrSanity = MaxSanity;
+    Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+    Inventory->Capacity = 20;
+    CurrHealth = MaxHealth;
+    CurrSanity = MaxSanity;
 }
 
 void APlayerCharacter::UseItem(UItem* Item)
@@ -23,6 +23,25 @@ void APlayerCharacter::UseItem(UItem* Item)
 	Item->Use(this);
 	// blueprint event
 	Item->OnUse(this);
+}
+
+FVector APlayerCharacter::GetLookAtPoint() const
+{
+    const float Range = 15000.f;
+
+    const FVector CamLoc = GetPawnViewLocation();          // camera/eyes
+    const FRotator AimRot = GetBaseAimRotation();           // controller aim
+    const FVector End = CamLoc + AimRot.Vector() * Range;
+
+    FHitResult Hit;
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(GetLookAtPoint), /*bTraceComplex=*/true, this);
+    Params.AddIgnoredActor(this);
+
+    if (GetWorld()->LineTraceSingleByChannel(Hit, CamLoc, End, ECC_Visibility, Params) && Hit.bBlockingHit)
+    {
+        return Hit.Location;
+    }
+    return End;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -34,44 +53,73 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Interact()
 {
-    // Perform a line trace from the camera
-    FVector CameraLoc;
-    FRotator CameraRot;
-    APlayerController* PC = Cast<APlayerController>(GetController());
-    if (PC)
+    const float AimRange        = 15000.f;  // how far we aim into the world
+    const float InteractReach   = 200.f;    // how far from the socket we can pick up
+    const float InteractRadius  = 64.f;     // sphere radius to be forgiving
+
+    // 1) Camera-based aim (start from eyes, use control rotation)
+    const FVector  CamStart = GetPawnViewLocation();
+    const FRotator AimRot   = GetBaseAimRotation();
+    const FVector  CamEnd   = CamStart + AimRot.Vector() * AimRange;
+
+    // Trace from camera to figure out where we're looking
+    FHitResult CamHit;
+    FCollisionQueryParams CamParams(SCENE_QUERY_STAT(Interact_Aim), /*bTraceComplex=*/true, this);
+    CamParams.AddIgnoredActor(this);
+
+    const bool bCamHit = GetWorld()->LineTraceSingleByChannel(
+        CamHit, CamStart, CamEnd, ECC_Visibility, CamParams);
+
+    const FVector TargetPoint = (bCamHit && CamHit.bBlockingHit)
+        ? CamHit.ImpactPoint
+        : CamEnd;
+
+    // 2) From the head/muzzle/etc., sweep toward that target
+    const FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("head"));
+    FVector Dir = (TargetPoint - SocketLocation).GetSafeNormal(KINDA_SMALL_NUMBER);
+    if (Dir.IsNearlyZero())
     {
-        PC->GetPlayerViewPoint(CameraLoc, CameraRot);  // get camera position and rotation
+        Dir = GetActorForwardVector(); // fallback
     }
-    else
-    {
-        // Fallback: use actor eyes location if no PlayerController (e.g. AI)
-        CameraLoc = GetActorLocation();
-        CameraRot = GetActorRotation();
-    }
+    const FVector SweepEnd = SocketLocation + Dir * InteractReach;
 
-
-    FVector TraceStart = CameraLoc;
-    FVector TraceEnd = CameraLoc + (CameraRot.Vector() * InteractDistance);
-
+    // Sphere sweep so we don’t miss tiny pickups
     FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);  // ignore self
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
-        Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_Sweep), /*bTraceComplex=*/true, this);
+    Params.AddIgnoredActor(this);
+    TArray<AActor*> AttachedActors;
+    GetAttachedActors(AttachedActors);          // all actors attached to this one
+    Params.AddIgnoredActors(AttachedActors);    // ignore them wholesale
 
-    // (Optional: Draw debug line to visualize the trace in development)
-    DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Green, false, 1.0f);
+    // If you have a dedicated “Interactable” object channel, use it here.
+    FCollisionObjectQueryParams ObjParams; // default = all
+    // e.g., ObjParams.AddObjectTypesToQuery(ECC_GameTraceChannel1); // Interactable
+
+    const bool bHit = GetWorld()->SweepSingleByObjectType(
+        Hit,
+        SocketLocation,
+        SweepEnd,
+        FQuat::Identity,
+        ObjParams,
+        FCollisionShape::MakeSphere(InteractRadius),
+        Params
+    );
+
+//#if !(UE_BUILD_SHIPPING)
+//    DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
+//    DrawDebugCapsule(GetWorld(),
+//        (SocketLocation + SweepEnd) * 0.5f,              // mid
+//        InteractReach * 0.5f, InteractRadius,
+//        FRotationMatrix::MakeFromX(Dir).ToQuat(),
+//        bHit ? FColor::Green : FColor::Red, false, 1.f);
+//#endif
 
     if (bHit && Hit.GetActor())
     {
         AActor* HitActor = Hit.GetActor();
-        // Check if the hit actor implements our interactable interface
         if (HitActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
         {
-            // Call the interact function on the hit actor
             IInteractable::Execute_Interact(HitActor, this);
-            // (This will trigger AItemPickUpWrapper::Interact_Implementation in C++, 
-            // which calls OnPickUp to add to inventory and destroy the item.)
         }
     }
 }
