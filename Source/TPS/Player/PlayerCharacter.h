@@ -67,6 +67,9 @@ public:
 		this->CurrSanity = Sanity;
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Aim")
+	FVector GetLookAtPoint() const;
+
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
