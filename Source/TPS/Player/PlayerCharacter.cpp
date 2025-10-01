@@ -105,14 +105,14 @@ void APlayerCharacter::Interact()
         Params
     );
 
-//#if !(UE_BUILD_SHIPPING)
-//    DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
-//    DrawDebugCapsule(GetWorld(),
-//        (SocketLocation + SweepEnd) * 0.5f,              // mid
-//        InteractReach * 0.5f, InteractRadius,
-//        FRotationMatrix::MakeFromX(Dir).ToQuat(),
-//        bHit ? FColor::Green : FColor::Red, false, 1.f);
-//#endif
+#if !(UE_BUILD_SHIPPING)
+    DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
+    DrawDebugCapsule(GetWorld(),
+        (SocketLocation + SweepEnd) * 0.5f,              // mid
+        InteractReach * 0.5f, InteractRadius,
+        FRotationMatrix::MakeFromX(Dir).ToQuat(),
+        bHit ? FColor::Green : FColor::Red, false, 1.f);
+#endif
 
     if (bHit && Hit.GetActor())
     {
