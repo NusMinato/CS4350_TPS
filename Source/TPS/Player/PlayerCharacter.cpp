@@ -53,14 +53,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Interact()
 {
-    const float AimRange        = 15000.f;  // how far we aim into the world
-    const float InteractReach   = 200.f;    // how far from the socket we can pick up
-    const float InteractRadius  = 64.f;     // sphere radius to be forgiving
+    const float AimRange = 15000.f;  // how far we aim into the world
+    const float InteractReach = 200.f;    // how far from the socket we can pick up
+    const float InteractRadius = 32.f;     // sphere radius to be forgiving
 
     // 1) Camera-based aim (start from eyes, use control rotation)
     const FVector  CamStart = GetPawnViewLocation();
-    const FRotator AimRot   = GetBaseAimRotation();
-    const FVector  CamEnd   = CamStart + AimRot.Vector() * AimRange;
+    const FRotator AimRot = GetBaseAimRotation();
+    const FVector  CamEnd = CamStart + AimRot.Vector() * AimRange;
 
     // Trace from camera to figure out where we're looking
     FHitResult CamHit;
