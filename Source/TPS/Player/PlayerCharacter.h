@@ -21,6 +21,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInventoryComponent> Inventory;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInventoryComponent> WeaponInventory;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
 
@@ -32,6 +35,17 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Player Stats")
 	int32 CurrSanity;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Interaction")
+	float InteractDistance = 500.f;
+
+	// Currently focused interactable item (in line of sight)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	AActor* FocusedItem;
+
+	// Function to perform interaction trace and handle results
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void Interact();
 
 	UFUNCTION(BlueprintCallable)
 	void UseItem(UItem* Item);
@@ -45,5 +59,25 @@ public:
 	void SetHealth(int32 Health) {
 		this->CurrHealth = Health;
 	}
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetSanity() {
+		return this->CurrSanity;
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void SetSanity(int32 Sanity) {
+		this->CurrSanity = Sanity;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Aim")
+	FVector GetLookAtPoint() const;
+
+protected:
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	/** Cache so we only update UI when the focused actor changes */
+	TWeakObjectPtr<AActor> LastFocusedInteractable;
 
 };
