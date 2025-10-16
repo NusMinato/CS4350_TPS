@@ -6,6 +6,9 @@
 #include "../InventorySystem/Items/Interactable.h"
 #include "../InventorySystem/Items/InventoryComponent.h"
 #include "../InventorySystem/Items/Item.h"
+#include "../InventorySystem/Items/WeaponItem.h"
+#include "../InventorySystem/Weapon/Weapon.h"
+#include "../InventorySystem/Weapon/WeaponActor.h"
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
 
@@ -20,6 +23,11 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::UseItem(UItem* Item)
 {
+	if (!Item)
+	{
+		return;
+	}
+	
 	Item->Use(this);
 	// blueprint event
 	Item->OnUse(this);
@@ -44,6 +52,166 @@ FVector APlayerCharacter::GetLookAtPoint() const
     return End;
 }
 
+void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
+{
+    if (!Item || !WeaponActor) return;
+
+    TObjectPtr<AWeaponActor> SlotActor = nullptr;
+    TObjectPtr<UWeaponItem> SlotItem = nullptr;
+
+    // Get the current weapon in the slot
+    switch (Item->WeaponType)
+    {
+    case EMyWeaponType::LongGun:
+        SlotActor = PrimaryWeapon;
+        SlotItem = PrimaryWeaponItem;
+        break;
+    case EMyWeaponType::Pistol:
+        SlotActor = SecondaryWeapon;
+        SlotItem = SecondaryWeaponItem;
+        break;
+    case EMyWeaponType::ColdWeapon:
+        SlotActor = MeleeWeapon;
+        SlotItem = MeleeWeaponItem;
+        break;
+    default:
+        return;
+    }
+
+    // Check for desync: if we have an item without actor or actor without item, clean up the slot
+    if ((SlotItem && !SlotActor) || (SlotActor && !SlotItem))
+    {
+        // Clear the slot to fix inconsistent state
+        switch (Item->WeaponType)
+        {
+        case EMyWeaponType::LongGun:
+            PrimaryWeapon = nullptr;
+            PrimaryWeaponItem = nullptr;
+            break;
+        case EMyWeaponType::Pistol:
+            SecondaryWeapon = nullptr;
+            SecondaryWeaponItem = nullptr;
+            break;
+        case EMyWeaponType::ColdWeapon:
+            MeleeWeapon = nullptr;
+            MeleeWeaponItem = nullptr;
+            break;
+        }
+        SlotActor = nullptr;
+        SlotItem = nullptr;
+    }
+
+    // If clicking the *same* item that's already equipped â†’ unequip it
+    if (SlotItem == Item && SlotActor)
+    {
+        Item->UnequipWeapon(this);
+        return;
+    }
+
+    // Now equip the new weapon
+    if (SlotItem && SlotItem != Item) {
+        SlotItem->UnequipWeapon(this);
+    }
+    switch (Item->WeaponType)
+    {
+    case EMyWeaponType::LongGun:
+        PrimaryWeapon = WeaponActor;
+        PrimaryWeaponItem = Item;
+        break;
+    case EMyWeaponType::Pistol:
+        SecondaryWeapon = WeaponActor;
+        SecondaryWeaponItem = Item;
+        break;
+    case EMyWeaponType::ColdWeapon:
+        MeleeWeapon = WeaponActor;
+        MeleeWeaponItem = Item;
+        break;
+    }
+
+    // Notify Blueprint to handle attachment and visibility
+    BP_OnWeaponEquipped(Item, WeaponActor);
+}
+
+void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
+{
+    if (!WeaponItem || !Inventory) return;
+
+    // Find and clear the weapon from the appropriate slot
+    AWeaponActor* WeaponActor = nullptr;
+    
+    if (WeaponItem == PrimaryWeaponItem)
+    {
+        WeaponActor = PrimaryWeapon;
+        PrimaryWeapon = nullptr;
+        PrimaryWeaponItem = nullptr;
+    }
+    else if (WeaponItem == SecondaryWeaponItem)
+    {
+        WeaponActor = SecondaryWeapon;
+        SecondaryWeapon = nullptr;
+        SecondaryWeaponItem = nullptr;
+    }
+    else if (WeaponItem == MeleeWeaponItem)
+    {
+        WeaponActor = MeleeWeapon;
+        MeleeWeapon = nullptr;
+        MeleeWeaponItem = nullptr;
+    }
+
+    // Notify Blueprint to handle drop (detach, enable physics, etc.)
+    if (WeaponActor)
+    {
+        BP_OnWeaponDropped(WeaponItem, WeaponActor);
+        WeaponActor->Drop();
+    }
+    
+    // Remove from inventory
+    Inventory->RemoveItem(WeaponItem);
+}
+
+void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
+{
+    if (!WeaponItem) return;
+
+    AWeaponActor* WeaponActor = nullptr;
+
+    if (WeaponItem == this->PrimaryWeaponItem) {
+        WeaponActor = this->PrimaryWeapon;
+        this->PrimaryWeapon = nullptr;
+        this->PrimaryWeaponItem = nullptr;
+    }
+    else if (WeaponItem == this->SecondaryWeaponItem) {
+        WeaponActor = this->SecondaryWeapon;
+        this->SecondaryWeapon = nullptr;
+        this->SecondaryWeaponItem = nullptr;
+    }
+    else if (WeaponItem == this->MeleeWeaponItem) {
+        WeaponActor = this->MeleeWeapon;
+        this->MeleeWeapon = nullptr;
+        this->MeleeWeaponItem = nullptr;
+    }
+
+    // Notify Blueprint to handle detachment and visibility
+    if (WeaponActor) {
+        BP_OnWeaponUnequipped(WeaponItem, WeaponActor);
+    }
+}
+
+TArray<AWeaponActor*> APlayerCharacter::GetAllWeapons()
+{
+    TArray<AWeaponActor*> Weapons;
+    if (this->PrimaryWeapon) {
+        Weapons.Add(this->PrimaryWeapon);
+    }
+    if (this->SecondaryWeapon) {
+        Weapons.Add(this->SecondaryWeapon);
+    }
+    if (this->MeleeWeapon) {
+        Weapons.Add(this->MeleeWeapon);
+    }
+    return Weapons;
+}
+
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -53,14 +221,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Interact()
 {
-    const float AimRange        = 15000.f;  // how far we aim into the world
-    const float InteractReach   = 200.f;    // how far from the socket we can pick up
-    const float InteractRadius  = 64.f;     // sphere radius to be forgiving
+    const float AimRange = 15000.f;  // how far we aim into the world
+    const float InteractReach = 200.f;    // how far from the socket we can pick up
+    const float InteractRadius = 32.f;     // sphere radius to be forgiving
 
     // 1) Camera-based aim (start from eyes, use control rotation)
     const FVector  CamStart = GetPawnViewLocation();
-    const FRotator AimRot   = GetBaseAimRotation();
-    const FVector  CamEnd   = CamStart + AimRot.Vector() * AimRange;
+    const FRotator AimRot = GetBaseAimRotation();
+    const FVector  CamEnd = CamStart + AimRot.Vector() * AimRange;
 
     // Trace from camera to figure out where we're looking
     FHitResult CamHit;
@@ -83,7 +251,7 @@ void APlayerCharacter::Interact()
     }
     const FVector SweepEnd = SocketLocation + Dir * InteractReach;
 
-    // Sphere sweep so we don’t miss tiny pickups
+    // Sphere sweep so we donï¿½t miss tiny pickups
     FHitResult Hit;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_Sweep), /*bTraceComplex=*/true, this);
     Params.AddIgnoredActor(this);
@@ -91,7 +259,7 @@ void APlayerCharacter::Interact()
     GetAttachedActors(AttachedActors);          // all actors attached to this one
     Params.AddIgnoredActors(AttachedActors);    // ignore them wholesale
 
-    // If you have a dedicated “Interactable” object channel, use it here.
+    // If you have a dedicated ï¿½Interactableï¿½ object channel, use it here.
     FCollisionObjectQueryParams ObjParams; // default = all
     // e.g., ObjParams.AddObjectTypesToQuery(ECC_GameTraceChannel1); // Interactable
 

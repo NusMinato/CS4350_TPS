@@ -3,6 +3,7 @@
 
 #include "ItemPickUpWrapper.h"
 #include "Items/Item.h"
+#include "Items/WeaponItem.h"
 #include "Items/InventoryComponent.h"
 #include "Items/Interactable.h"
 #include "../Player/PlayerCharacter.h"
@@ -30,22 +31,29 @@ void AItemPickUpWrapper::BeginPlay() {
 
 void AItemPickUpWrapper::OnPickUp(APlayerCharacter* PlayerCharacter)
 {
-    if (!PlayerCharacter || !PlayerCharacter->Inventory || !WrappedItem) return;
+    if (!PlayerCharacter || !PlayerCharacter->Inventory || !this->WrappedItem) return;
+    SetActorEnableCollision(false); // prevent double pickup
 
-    // Prevent double-pick in the same frame (optional but recommended)
-    SetActorEnableCollision(false);
 
-    if (PlayerCharacter->Inventory->AddItem(WrappedItem))
+    // Add the item to the inventory
+    if (PlayerCharacter->Inventory->AddItem(this->WrappedItem))
     {
-        WrappedItem = nullptr;
+        // If it's a weapon, immediately use (equip) it
+        if (this->WrappedItem->IsA<UWeaponItem>())
+        {
+            PlayerCharacter->UseItem(this->WrappedItem);  // This calls UWeaponItem::Use, spawning the actor
+        }
+        // Remove the item from the wrapper and destroy pickup actor
+        this->WrappedItem = nullptr;
         Destroy();
     }
     else
     {
-        // Re-enable collision if add failed
+        // If add failed (e.g., inventory full for non-weapons), re-enable collision so it can be picked up later
         SetActorEnableCollision(true);
     }
 }
+
 
 void AItemPickUpWrapper::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -71,10 +79,10 @@ void AItemPickUpWrapper::Interact_Implementation(APawn* InstigatorPawn)
 
 FText AItemPickUpWrapper::GetInteractText_Implementation() const
 {
-    if (WrappedItem)
+    if (this->WrappedItem)
     {
         // e.g. "Press E to pick up Pistol"
-        FText itemName = WrappedItem->ItemDisplayName;
+        FText itemName = this->WrappedItem->ItemDisplayName;
         return FText::Format(NSLOCTEXT("Interact", "PickupPrompt", "Press E to pick up {0}"), itemName);
     }
     // Default text if no item data

@@ -24,28 +24,28 @@ void UInventoryComponent::BeginPlay()
 
 bool UInventoryComponent::AddItem(UItem* Item)
 {
-	if (!Item)
-	{
-		OnInventoryAddFailed.Broadcast(nullptr, FText::FromString(TEXT("Null item")));
-		return false;
-	}
+    if (!Item)
+    {
+        OnInventoryAddFailed.Broadcast(nullptr, FText::FromString(TEXT("Null item")));
+        return false;
+    }
+    if (Items.Num() >= Capacity)
+    {
+        OnInventoryAddFailed.Broadcast(Item, FText::FromString(TEXT("Inventory is full")));
+        return false;
+    }
 
-	if (Items.Num() >= Capacity)
-	{
-		OnInventoryAddFailed.Broadcast(Item, FText::FromString(TEXT("Inventory is full")));
-		return false;
-	}
+    UItem* ItemForInv = (Item->GetOuter() == this)
+        ? Item
+        : DuplicateObject<UItem>(Item, this);   // ✅ make the Inventory the Outer
 
-	UItem* ItemForInv = Item->GetOuter() == this
-		? Item
-		: DuplicateObject<UItem>(Item, this);
+    // Good practice: set runtime context on the item you actually store
+    ItemForInv->World = GetWorld();
+    ItemForInv->OwningInventory = this;
 
-	Item->OwningInventory = this;
-	Items.Add(Item);
-
-	this->OnInventoryUpdated.Broadcast();
-
-	return true;
+    Items.Add(ItemForInv);                      // ✅ store the right object
+    OnInventoryUpdated.Broadcast();
+    return true;
 }
 
 bool UInventoryComponent::RemoveItem(UItem* Item)

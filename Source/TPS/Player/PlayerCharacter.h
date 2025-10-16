@@ -6,8 +6,10 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class AWeaponActor;
 class UInventoryComponent;
 class UItem;
+class UWeaponItem;
 
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
@@ -24,6 +26,24 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInventoryComponent> WeaponInventory;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AWeaponActor> PrimaryWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AWeaponActor> SecondaryWeapon;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AWeaponActor> MeleeWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponItem> PrimaryWeaponItem;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponItem> SecondaryWeaponItem;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponItem> MeleeWeaponItem;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
 
@@ -57,7 +77,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetHealth(int32 Health) {
-		this->CurrHealth = Health;
+		this->CurrHealth = FMath::Clamp(Health, 0, MaxHealth);
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -67,11 +87,33 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetSanity(int32 Sanity) {
-		this->CurrSanity = Sanity;
+		this->CurrSanity = FMath::Clamp(Sanity, 0, MaxSanity);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Aim")
 	FVector GetLookAtPoint() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void OnWeaponDropped(UWeaponItem* WeaponItem);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UnequipWeapon(UWeaponItem* WeaponItem);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	TArray<AWeaponActor*> GetAllWeapons();
+
+	// Blueprint events for weapon attachment/visibility management
+	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
+	void BP_OnWeaponEquipped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
+	void BP_OnWeaponUnequipped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
+	void BP_OnWeaponDropped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
