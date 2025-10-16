@@ -23,9 +23,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInventoryComponent> Inventory;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInventoryComponent> WeaponInventory;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AWeaponActor> PrimaryWeapon;
 
@@ -43,6 +40,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponItem> MeleeWeaponItem;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponItem> ActiveWeaponItem;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AWeaponActor> ActiveWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
@@ -62,6 +65,7 @@ public:
 	// Currently focused interactable item (in line of sight)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	AActor* FocusedItem;
+
 
 	// Function to perform interaction trace and handle results
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
@@ -103,7 +107,7 @@ public:
 	void UnequipWeapon(UWeaponItem* WeaponItem);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	TArray<AWeaponActor*> GetAllWeapons();
+	TArray<UWeaponItem*> GetAllWeapons();
 
 	// Blueprint events for weapon attachment/visibility management
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")

@@ -197,17 +197,17 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     }
 }
 
-TArray<AWeaponActor*> APlayerCharacter::GetAllWeapons()
+TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 {
-    TArray<AWeaponActor*> Weapons;
+    TArray<UWeaponItem*> Weapons;
     if (this->PrimaryWeapon) {
-        Weapons.Add(this->PrimaryWeapon);
+        Weapons.Add(this->PrimaryWeaponItem);
     }
     if (this->SecondaryWeapon) {
-        Weapons.Add(this->SecondaryWeapon);
+        Weapons.Add(this->SecondaryWeaponItem);
     }
     if (this->MeleeWeapon) {
-        Weapons.Add(this->MeleeWeapon);
+        Weapons.Add(this->MeleeWeaponItem);
     }
     return Weapons;
 }
