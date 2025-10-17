@@ -130,6 +130,7 @@ void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
 
     // Notify Blueprint to handle attachment and visibility
     BP_OnWeaponEquipped(Item, WeaponActor);
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
@@ -167,6 +168,7 @@ void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
     
     // Remove from inventory
     Inventory->RemoveItem(WeaponItem);
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
@@ -195,6 +197,7 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     if (WeaponActor) {
         BP_OnWeaponUnequipped(WeaponItem, WeaponActor);
     }
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
@@ -210,6 +213,27 @@ TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
         Weapons.Add(this->MeleeWeaponItem);
     }
     return Weapons;
+}
+
+void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
+{
+    if (!WeaponItem) 
+    {
+        // Clear active weapon
+        ActiveWeaponItem = nullptr;
+        ActiveWeapon = nullptr;
+        OnEquippedWeaponUpdated.Broadcast();
+        return;
+    }
+
+    // Set the active weapon item
+    ActiveWeaponItem = WeaponItem;
+    
+    // Get the RuntimeActor from the weapon item and set it as ActiveWeapon
+    ActiveWeapon = WeaponItem->GetRuntimeActor();
+    
+    // Broadcast update event
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

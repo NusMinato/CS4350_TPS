@@ -11,6 +11,8 @@ class UInventoryComponent;
 class UItem;
 class UWeaponItem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedWeaponUpdated);
+
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
 {
@@ -41,10 +43,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponItem> MeleeWeaponItem;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponItem> ActiveWeaponItem;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AWeaponActor> ActiveWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
@@ -109,6 +111,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	TArray<UWeaponItem*> GetAllWeapons();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetActiveWeapon(UWeaponItem* WeaponItem);
+
 	// Blueprint events for weapon attachment/visibility management
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void BP_OnWeaponEquipped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
@@ -118,6 +123,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void BP_OnWeaponDropped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnEquippedWeaponUpdated OnEquippedWeaponUpdated;
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
