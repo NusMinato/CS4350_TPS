@@ -177,6 +177,30 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
 
     AWeaponActor* WeaponActor = nullptr;
 
+    if (WeaponItem == this->ActiveWeaponItem) {
+        WeaponActor = this->ActiveWeapon;
+        
+        // Sync data back from WeaponActor to WeaponItem before destroying
+        if (WeaponActor && WeaponItem) {
+            WeaponItem->CurrentAmmo = WeaponActor->CurrentAmmo;
+            WeaponItem->MaxAmmo = WeaponActor->MaxAmmo;
+            WeaponItem->Damage = WeaponActor->Damage;
+            WeaponItem->SanityCost = WeaponActor->SanityCost;
+            WeaponItem->WeaponType = WeaponActor->WeaponType;
+            WeaponItem->IsEquipped = false;
+            WeaponItem->SetRuntimeActor(nullptr);
+        }
+        
+        // Destroy the weapon actor
+        if (WeaponActor) {
+            WeaponActor->Destroy();
+        }
+        
+        OnActiveWeaponUnequipped.Broadcast();
+        this->ActiveWeaponItem = nullptr;
+        this->ActiveWeapon = nullptr;
+    }
+
     if (WeaponItem == this->PrimaryWeaponItem) {
         WeaponActor = this->PrimaryWeapon;
         this->PrimaryWeapon = nullptr;
@@ -219,6 +243,7 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
 {
     if (!WeaponItem) 
     {
+        UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: Clearing active weapon"));
         // Clear active weapon
         ActiveWeaponItem = nullptr;
         ActiveWeapon = nullptr;
@@ -231,6 +256,16 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
     
     // Get the RuntimeActor from the weapon item and set it as ActiveWeapon
     ActiveWeapon = WeaponItem->GetRuntimeActor();
+    
+    UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: ActiveWeaponItem=%s, ActiveWeapon=%s"), 
+        *WeaponItem->ItemDisplayName.ToString(),
+        ActiveWeapon ? *ActiveWeapon->GetName() : TEXT("NULL"));
+    
+    if (ActiveWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ActiveWeapon Stats: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d"), 
+            ActiveWeapon->MaxAmmo, ActiveWeapon->CurrentAmmo, ActiveWeapon->Damage);
+    }
     
     // Broadcast update event
     OnEquippedWeaponUpdated.Broadcast();

@@ -22,19 +22,39 @@ void UWeaponItem::DropWeapon(APlayerCharacter* PlayerCharacter) {
 	
 	// Clear item state
 	this->IsEquipped = false;
-	this->RuntimeActor = nullptr;
+	this->SetRuntimeActor(nullptr);
 }
 
 void UWeaponItem::EquipWeapon(APlayerCharacter* PlayerCharacter) {
-	if (!PlayerCharacter || !this->WeaponActorClass) return;
+	if (!PlayerCharacter || !this->WeaponActorClass) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("EquipWeapon FAILED: PlayerCharacter=%s, WeaponActorClass=%s"), 
+			PlayerCharacter ? TEXT("Valid") : TEXT("NULL"),
+			this->WeaponActorClass ? TEXT("Valid") : TEXT("NULL"));
+		return;
+	}
 
 	UWorld* WorldCtx = PlayerCharacter->GetWorld();
-	if (!WorldCtx) return;
+	if (!WorldCtx) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("EquipWeapon FAILED: World context is NULL"));
+		return;
+	}
 	
 	AWeaponActor* SpawnedWeapon = this->RuntimeActor;
 	if (!SpawnedWeapon) {
+		UE_LOG(LogTemp, Warning, TEXT("Spawning new weapon actor from class: %s"), *WeaponActorClass->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("WeaponItem DATA BEFORE SPAWN: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d, SanityCost=%d"), 
+			this->MaxAmmo, this->CurrentAmmo, this->Damage, this->SanityCost);
+		
 		SpawnedWeapon = WorldCtx->SpawnActor<AWeaponActor>(this->WeaponActorClass);
-		if (!SpawnedWeapon) return;
+		if (!SpawnedWeapon) 
+		{
+			UE_LOG(LogTemp, Error, TEXT("SpawnActor FAILED! Could not spawn weapon actor."));
+			return;
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("Weapon Actor spawned successfully: %s"), *SpawnedWeapon->GetName());
 		
 		SpawnedWeapon->SourceItem = this;
 		SpawnedWeapon->OwningCharacter = PlayerCharacter;
@@ -44,7 +64,16 @@ void UWeaponItem::EquipWeapon(APlayerCharacter* PlayerCharacter) {
 		SpawnedWeapon->MaxAmmo = this->MaxAmmo;
 		SpawnedWeapon->SanityCost = this->SanityCost;
 		SpawnedWeapon->WeaponType = this->WeaponType;
-		this->RuntimeActor = SpawnedWeapon;
+		SpawnedWeapon->Damage = this->Damage;
+		
+		UE_LOG(LogTemp, Warning, TEXT("WeaponActor DATA AFTER COPY: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d, SanityCost=%d"), 
+			SpawnedWeapon->MaxAmmo, SpawnedWeapon->CurrentAmmo, SpawnedWeapon->Damage, SpawnedWeapon->SanityCost);
+		
+		this->SetRuntimeActor(SpawnedWeapon);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Re-equipping existing weapon actor: %s"), *SpawnedWeapon->GetName());
 	}
 	// Blueprint will handle attachment and visibility
 
