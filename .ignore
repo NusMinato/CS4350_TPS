@@ -2,7 +2,9 @@
 /.vscode
 /Content
 /DerivedDataCache
+/docs
 /Intermediate
 /Saved
+/Plugins/GASPALS/Content
 /Plugins/UEGitPlugin/Intermediate
 /Plugins/UEGitPlugin/Screenshots

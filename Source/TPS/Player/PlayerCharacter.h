@@ -12,6 +12,7 @@ class UItem;
 class UWeaponItem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedWeaponUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActiveWeaponUnequipped);
 
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
@@ -126,6 +127,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnEquippedWeaponUpdated OnEquippedWeaponUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnActiveWeaponUnequipped OnActiveWeaponUnequipped;
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
