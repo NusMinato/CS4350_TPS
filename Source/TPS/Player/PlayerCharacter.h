@@ -11,6 +11,9 @@ class UInventoryComponent;
 class UItem;
 class UWeaponItem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedWeaponUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActiveWeaponUnequipped);
+
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
 {
@@ -22,9 +25,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInventoryComponent> Inventory;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInventoryComponent> WeaponInventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AWeaponActor> PrimaryWeapon;
@@ -43,6 +43,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponItem> MeleeWeaponItem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponItem> ActiveWeaponItem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AWeaponActor> ActiveWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	int32 MaxHealth = 100;
@@ -62,6 +68,7 @@ public:
 	// Currently focused interactable item (in line of sight)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	AActor* FocusedItem;
+
 
 	// Function to perform interaction trace and handle results
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
@@ -103,7 +110,10 @@ public:
 	void UnequipWeapon(UWeaponItem* WeaponItem);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	TArray<AWeaponActor*> GetAllWeapons();
+	TArray<UWeaponItem*> GetAllWeapons();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetActiveWeapon(UWeaponItem* WeaponItem);
 
 	// Blueprint events for weapon attachment/visibility management
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
@@ -114,6 +124,12 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void BP_OnWeaponDropped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnEquippedWeaponUpdated OnEquippedWeaponUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnActiveWeaponUnequipped OnActiveWeaponUnequipped;
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

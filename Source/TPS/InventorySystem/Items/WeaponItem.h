@@ -13,6 +13,7 @@ class AWeaponActor;
 /**
  * 
  */
+
 UCLASS()
 class TPS_API UWeaponItem : public UItem
 {
@@ -46,6 +47,12 @@ public:
 	void DropWeapon(APlayerCharacter* PlayerCharacter);
 	void EquipWeapon(APlayerCharacter* PlayerCharacter);
 	void UnequipWeapon(APlayerCharacter* PlayerCharacter);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	AWeaponActor* GetRuntimeActor() const { return RuntimeActor; }
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetRuntimeActor(AWeaponActor* NewActor) { RuntimeActor = NewActor; }
 protected:
 
 	UPROPERTY(Transient)

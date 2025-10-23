@@ -130,6 +130,7 @@ void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
 
     // Notify Blueprint to handle attachment and visibility
     BP_OnWeaponEquipped(Item, WeaponActor);
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
@@ -167,6 +168,7 @@ void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
     
     // Remove from inventory
     Inventory->RemoveItem(WeaponItem);
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
@@ -174,6 +176,30 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     if (!WeaponItem) return;
 
     AWeaponActor* WeaponActor = nullptr;
+
+    if (WeaponItem == this->ActiveWeaponItem) {
+        WeaponActor = this->ActiveWeapon;
+        
+        // Sync data back from WeaponActor to WeaponItem before destroying
+        if (WeaponActor && WeaponItem) {
+            WeaponItem->CurrentAmmo = WeaponActor->CurrentAmmo;
+            WeaponItem->MaxAmmo = WeaponActor->MaxAmmo;
+            WeaponItem->Damage = WeaponActor->Damage;
+            WeaponItem->SanityCost = WeaponActor->SanityCost;
+            WeaponItem->WeaponType = WeaponActor->WeaponType;
+            WeaponItem->IsEquipped = false;
+            WeaponItem->SetRuntimeActor(nullptr);
+        }
+        
+        // Destroy the weapon actor
+        if (WeaponActor) {
+            WeaponActor->Destroy();
+        }
+        
+        OnActiveWeaponUnequipped.Broadcast();
+        this->ActiveWeaponItem = nullptr;
+        this->ActiveWeapon = nullptr;
+    }
 
     if (WeaponItem == this->PrimaryWeaponItem) {
         WeaponActor = this->PrimaryWeapon;
@@ -195,21 +221,54 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     if (WeaponActor) {
         BP_OnWeaponUnequipped(WeaponItem, WeaponActor);
     }
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
-TArray<AWeaponActor*> APlayerCharacter::GetAllWeapons()
+TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 {
-    TArray<AWeaponActor*> Weapons;
+    TArray<UWeaponItem*> Weapons;
     if (this->PrimaryWeapon) {
-        Weapons.Add(this->PrimaryWeapon);
+        Weapons.Add(this->PrimaryWeaponItem);
     }
     if (this->SecondaryWeapon) {
-        Weapons.Add(this->SecondaryWeapon);
+        Weapons.Add(this->SecondaryWeaponItem);
     }
     if (this->MeleeWeapon) {
-        Weapons.Add(this->MeleeWeapon);
+        Weapons.Add(this->MeleeWeaponItem);
     }
     return Weapons;
+}
+
+void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
+{
+    if (!WeaponItem) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: Clearing active weapon"));
+        // Clear active weapon
+        ActiveWeaponItem = nullptr;
+        ActiveWeapon = nullptr;
+        OnEquippedWeaponUpdated.Broadcast();
+        return;
+    }
+
+    // Set the active weapon item
+    ActiveWeaponItem = WeaponItem;
+    
+    // Get the RuntimeActor from the weapon item and set it as ActiveWeapon
+    ActiveWeapon = WeaponItem->GetRuntimeActor();
+    
+    UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: ActiveWeaponItem=%s, ActiveWeapon=%s"), 
+        *WeaponItem->ItemDisplayName.ToString(),
+        ActiveWeapon ? *ActiveWeapon->GetName() : TEXT("NULL"));
+    
+    if (ActiveWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ActiveWeapon Stats: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d"), 
+            ActiveWeapon->MaxAmmo, ActiveWeapon->CurrentAmmo, ActiveWeapon->Damage);
+    }
+    
+    // Broadcast update event
+    OnEquippedWeaponUpdated.Broadcast();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
