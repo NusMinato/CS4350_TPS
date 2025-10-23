@@ -333,12 +333,27 @@ void APlayerCharacter::Interact()
     );
 
 #if !(UE_BUILD_SHIPPING)
+    // Draw camera aim line (cyan)
     DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
-    DrawDebugCapsule(GetWorld(),
-        (SocketLocation + SweepEnd) * 0.5f,              // mid
-        InteractReach * 0.5f, InteractRadius,
-        FRotationMatrix::MakeFromX(Dir).ToQuat(),
-        bHit ? FColor::Green : FColor::Red, false, 1.f);
+    
+    // Draw the actual sweep path (from head socket to end)
+    DrawDebugLine(GetWorld(), SocketLocation, SweepEnd, 
+        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
+    
+    // Draw sphere at start of sweep (player's head)
+    DrawDebugSphere(GetWorld(), SocketLocation, InteractRadius, 12, 
+        FColor::Yellow, false, 1.f, 0, 1.f);
+    
+    // Draw sphere at end of sweep
+    DrawDebugSphere(GetWorld(), SweepEnd, InteractRadius, 12, 
+        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.f);
+    
+    // If hit, show the hit point
+    if (bHit)
+    {
+        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 12, 
+            FColor::Orange, false, 1.f, 0, 2.f);
+    }
 #endif
 
     if (bHit && Hit.GetActor())
