@@ -280,81 +280,59 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Interact()
 {
-    const float AimRange = 15000.f;  // how far we aim into the world
-    const float InteractReach = 200.f;    // how far from the socket we can pick up
-    const float InteractRadius = 32.f;     // sphere radius to be forgiving
+    const float InteractRange = 500.f;    // Maximum interact distance
+    const float InteractRadius = 100.f;    // Larger sphere radius for easier pickup
 
-    // 1) Camera-based aim (start from eyes, use control rotation)
+    // Start from camera (what you're seeing) and sweep forward
     const FVector  CamStart = GetPawnViewLocation();
     const FRotator AimRot = GetBaseAimRotation();
-    const FVector  CamEnd = CamStart + AimRot.Vector() * AimRange;
+    const FVector  CamEnd = CamStart + AimRot.Vector() * InteractRange;
 
-    // Trace from camera to figure out where we're looking
-    FHitResult CamHit;
-    FCollisionQueryParams CamParams(SCENE_QUERY_STAT(Interact_Aim), /*bTraceComplex=*/true, this);
-    CamParams.AddIgnoredActor(this);
-
-    const bool bCamHit = GetWorld()->LineTraceSingleByChannel(
-        CamHit, CamStart, CamEnd, ECC_Visibility, CamParams);
-
-    const FVector TargetPoint = (bCamHit && CamHit.bBlockingHit)
-        ? CamHit.ImpactPoint
-        : CamEnd;
-
-    // 2) From the head/muzzle/etc., sweep toward that target
-    const FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("head"));
-    FVector Dir = (TargetPoint - SocketLocation).GetSafeNormal(KINDA_SMALL_NUMBER);
-    if (Dir.IsNearlyZero())
-    {
-        Dir = GetActorForwardVector(); // fallback
-    }
-    const FVector SweepEnd = SocketLocation + Dir * InteractReach;
-
-    // Sphere sweep so we don�t miss tiny pickups
+    // Sphere sweep from camera forward - picks up what you're looking at
     FHitResult Hit;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_Sweep), /*bTraceComplex=*/true, this);
     Params.AddIgnoredActor(this);
     TArray<AActor*> AttachedActors;
-    GetAttachedActors(AttachedActors);          // all actors attached to this one
-    Params.AddIgnoredActors(AttachedActors);    // ignore them wholesale
+    GetAttachedActors(AttachedActors);
+    Params.AddIgnoredActors(AttachedActors);
 
-    // If you have a dedicated �Interactable� object channel, use it here.
-    FCollisionObjectQueryParams ObjParams; // default = all
-    // e.g., ObjParams.AddObjectTypesToQuery(ECC_GameTraceChannel1); // Interactable
+    // Use all object types for interaction
+    FCollisionObjectQueryParams ObjParams;
+    // If you want specific channels: ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 
     const bool bHit = GetWorld()->SweepSingleByObjectType(
         Hit,
-        SocketLocation,
-        SweepEnd,
+        CamStart,
+        CamEnd,
         FQuat::Identity,
         ObjParams,
         FCollisionShape::MakeSphere(InteractRadius),
         Params
     );
 
-#if !(UE_BUILD_SHIPPING)
-    // Draw camera aim line (cyan)
-    DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
+// #if !(UE_BUILD_SHIPPING)
+//     // Draw the interact sweep line from camera
+//     DrawDebugLine(GetWorld(), CamStart, CamEnd, 
+//         bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
     
-    // Draw the actual sweep path (from head socket to end)
-    DrawDebugLine(GetWorld(), SocketLocation, SweepEnd, 
-        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
+//     // Draw sphere at start (camera position)
+//     DrawDebugSphere(GetWorld(), CamStart, InteractRadius, 12, 
+//         FColor::Yellow, false, 1.f, 0, 1.f);
     
-    // Draw sphere at start of sweep (player's head)
-    DrawDebugSphere(GetWorld(), SocketLocation, InteractRadius, 12, 
-        FColor::Yellow, false, 1.f, 0, 1.f);
+//     // Draw sphere at max reach
+//     DrawDebugSphere(GetWorld(), CamEnd, InteractRadius, 12, 
+//         FColor::Blue, false, 1.f, 0, 1.f);
     
-    // Draw sphere at end of sweep
-    DrawDebugSphere(GetWorld(), SweepEnd, InteractRadius, 12, 
-        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.f);
-    
-    // If hit, show the hit point
-    if (bHit)
-    {
-        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 12, 
-            FColor::Orange, false, 1.f, 0, 2.f);
-    }
-#endif
+//     // If hit something, show the hit point
+//     if (bHit)
+//     {
+//         DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, 
+//             FColor::Orange, false, 1.f, 0, 2.f);
+//         DrawDebugString(GetWorld(), Hit.ImpactPoint + FVector(0, 0, 30.f), 
+//             Hit.GetActor() ? Hit.GetActor()->GetName() : TEXT("Unknown"), 
+//             nullptr, FColor::White, 1.f);
+//     }
+// #endif
 
     if (bHit && Hit.GetActor())
     {
