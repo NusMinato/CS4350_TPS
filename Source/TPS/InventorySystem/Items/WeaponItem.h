@@ -50,6 +50,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
 	AWeaponActor* GetRuntimeActor() const { return RuntimeActor; }
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetRuntimeActor(AWeaponActor* NewActor) { RuntimeActor = NewActor; }
 protected:
 
 	UPROPERTY(Transient)
