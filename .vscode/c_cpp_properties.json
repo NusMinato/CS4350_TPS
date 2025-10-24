@@ -2,22 +2,22 @@
     "configurations": [
         {
             "name": "TPSEditor Editor Win64 Development (TPS)",
-            "compilerPath": "D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+            "compilerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.41.34120\\bin\\Hostx64\\x64\\cl.exe",
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "msvc-x64",
             "compileCommands": [
-                "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_TPS.json"
+                "H:\\sem7\\CS4350\\.vscode\\compileCommands_TPS.json"
             ]
         },
         {
             "name": "Win32",
-            "compilerPath": "D:\\Program files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\bin\\Hostx64\\x64\\cl.exe",
+            "compilerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.41.34120\\bin\\Hostx64\\x64\\cl.exe",
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "msvc-x64",
             "compileCommands": [
-                "D:\\Mods\\Current modules\\CS4350 Game Development Project\\Project\\.vscode\\compileCommands_Default.json"
+                "H:\\sem7\\CS4350\\.vscode\\compileCommands_Default.json"
             ]
         }
     ],

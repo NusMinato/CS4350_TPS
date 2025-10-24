@@ -177,6 +177,30 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
 
     AWeaponActor* WeaponActor = nullptr;
 
+    if (WeaponItem == this->ActiveWeaponItem) {
+        WeaponActor = this->ActiveWeapon;
+        
+        // Sync data back from WeaponActor to WeaponItem before destroying
+        if (WeaponActor && WeaponItem) {
+            WeaponItem->CurrentAmmo = WeaponActor->CurrentAmmo;
+            WeaponItem->MaxAmmo = WeaponActor->MaxAmmo;
+            WeaponItem->Damage = WeaponActor->Damage;
+            WeaponItem->SanityCost = WeaponActor->SanityCost;
+            WeaponItem->WeaponType = WeaponActor->WeaponType;
+            WeaponItem->IsEquipped = false;
+            WeaponItem->SetRuntimeActor(nullptr);
+        }
+        
+        // Destroy the weapon actor
+        if (WeaponActor) {
+            WeaponActor->Destroy();
+        }
+        
+        OnActiveWeaponUnequipped.Broadcast();
+        this->ActiveWeaponItem = nullptr;
+        this->ActiveWeapon = nullptr;
+    }
+
     if (WeaponItem == this->PrimaryWeaponItem) {
         WeaponActor = this->PrimaryWeapon;
         this->PrimaryWeapon = nullptr;
@@ -219,6 +243,7 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
 {
     if (!WeaponItem) 
     {
+        UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: Clearing active weapon"));
         // Clear active weapon
         ActiveWeaponItem = nullptr;
         ActiveWeapon = nullptr;
@@ -231,6 +256,16 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
     
     // Get the RuntimeActor from the weapon item and set it as ActiveWeapon
     ActiveWeapon = WeaponItem->GetRuntimeActor();
+    
+    UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: ActiveWeaponItem=%s, ActiveWeapon=%s"), 
+        *WeaponItem->ItemDisplayName.ToString(),
+        ActiveWeapon ? *ActiveWeapon->GetName() : TEXT("NULL"));
+    
+    if (ActiveWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ActiveWeapon Stats: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d"), 
+            ActiveWeapon->MaxAmmo, ActiveWeapon->CurrentAmmo, ActiveWeapon->Damage);
+    }
     
     // Broadcast update event
     OnEquippedWeaponUpdated.Broadcast();
@@ -298,12 +333,27 @@ void APlayerCharacter::Interact()
     );
 
 #if !(UE_BUILD_SHIPPING)
+    // Draw camera aim line (cyan)
     DrawDebugLine(GetWorld(), CamStart, TargetPoint, FColor::Cyan, false, 1.f);
-    DrawDebugCapsule(GetWorld(),
-        (SocketLocation + SweepEnd) * 0.5f,              // mid
-        InteractReach * 0.5f, InteractRadius,
-        FRotationMatrix::MakeFromX(Dir).ToQuat(),
-        bHit ? FColor::Green : FColor::Red, false, 1.f);
+    
+    // Draw the actual sweep path (from head socket to end)
+    DrawDebugLine(GetWorld(), SocketLocation, SweepEnd, 
+        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
+    
+    // Draw sphere at start of sweep (player's head)
+    DrawDebugSphere(GetWorld(), SocketLocation, InteractRadius, 12, 
+        FColor::Yellow, false, 1.f, 0, 1.f);
+    
+    // Draw sphere at end of sweep
+    DrawDebugSphere(GetWorld(), SweepEnd, InteractRadius, 12, 
+        bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.f);
+    
+    // If hit, show the hit point
+    if (bHit)
+    {
+        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 12, 
+            FColor::Orange, false, 1.f, 0, 2.f);
+    }
 #endif
 
     if (bHit && Hit.GetActor())
