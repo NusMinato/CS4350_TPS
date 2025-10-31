@@ -27,6 +27,7 @@ public:
 
 	bool AddItem(UItem* Item);
 	bool RemoveItem(UItem* Item);
+	void Clear();  // Clear all items from inventory
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Inventory", Instanced)
 	TArray<TObjectPtr<UItem>> DefaultItems;

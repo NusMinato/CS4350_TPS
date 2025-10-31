@@ -15,6 +15,8 @@ class TPS_API USanityItem : public UItem
 	GENERATED_BODY()
 
 public:
+	USanityItem();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sanity restoration Amount", meta = (ClampMin = "10"))
 	int32 RestorationAmount = 10;
 
