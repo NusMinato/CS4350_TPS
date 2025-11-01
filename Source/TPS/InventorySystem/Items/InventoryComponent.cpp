@@ -29,22 +29,72 @@ bool UInventoryComponent::AddItem(UItem* Item)
         OnInventoryAddFailed.Broadcast(nullptr, FText::FromString(TEXT("Null item")));
         return false;
     }
+
+    // Try to stack with existing items first
+    if (Item->bIsStackable)
+    {
+        for (UItem* ExistingItem : Items)
+        {
+            if (ExistingItem && ExistingItem->CanStackWith(Item))
+            {
+                int32 Overflow = ExistingItem->AddQuantity(Item->Quantity);
+                
+                if (Overflow == 0)
+                {
+                    // All items stacked successfully
+                    UE_LOG(LogTemp, Log, TEXT("Stacked %d x %s. New stack: %d"), 
+                        Item->Quantity, *Item->ItemDisplayName.ToString(), ExistingItem->Quantity);
+                    OnInventoryUpdated.Broadcast();
+                    return true;
+                }
+                else
+                {
+                    // Partially stacked, existing stack is full
+                    // Check if we have room for another stack
+                    if (Items.Num() >= Capacity)
+                    {
+                        OnInventoryAddFailed.Broadcast(Item, FText::FromString(TEXT("Inventory is full")));
+                        return false;
+                    }
+                    
+                    // Create new stack with overflow amount
+                    UItem* OverflowItem = DuplicateObject<UItem>(Item, this);
+                    OverflowItem->Quantity = Overflow;
+                    OverflowItem->World = GetWorld();
+                    OverflowItem->OwningInventory = this;
+                    
+                    Items.Add(OverflowItem);
+                    OnInventoryUpdated.Broadcast();
+                    
+                    UE_LOG(LogTemp, Log, TEXT("Created overflow stack: %s x%d"), 
+                        *OverflowItem->ItemDisplayName.ToString(), Overflow);
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Check capacity
     if (Items.Num() >= Capacity)
     {
         OnInventoryAddFailed.Broadcast(Item, FText::FromString(TEXT("Inventory is full")));
         return false;
     }
 
+    // Add as new item
     UItem* ItemForInv = (Item->GetOuter() == this)
         ? Item
-        : DuplicateObject<UItem>(Item, this);   // ✅ make the Inventory the Outer
+        : DuplicateObject<UItem>(Item, this);
 
-    // Good practice: set runtime context on the item you actually store
     ItemForInv->World = GetWorld();
     ItemForInv->OwningInventory = this;
 
-    Items.Add(ItemForInv);                      // ✅ store the right object
+    Items.Add(ItemForInv);
     OnInventoryUpdated.Broadcast();
+    
+    UE_LOG(LogTemp, Log, TEXT("Added item: %s x%d"), 
+        *ItemForInv->ItemDisplayName.ToString(), ItemForInv->Quantity);
+    
     return true;
 }
 
@@ -59,4 +109,22 @@ bool UInventoryComponent::RemoveItem(UItem* Item)
 	}
 
 	return false;
+}
+
+void UInventoryComponent::Clear()
+{
+	// Clear all items from inventory
+	for (UItem* Item : Items)
+	{
+		if (Item)
+		{
+			Item->OwningInventory = nullptr;
+			Item->World = nullptr;
+		}
+	}
+	
+	Items.Empty();
+	OnInventoryUpdated.Broadcast();
+	
+	UE_LOG(LogTemp, Log, TEXT("Inventory cleared"));
 }
