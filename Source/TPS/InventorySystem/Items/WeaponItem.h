@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Item.h"
 #include "../Weapon/EMyWeaponType.h"
+#include "../Weapon/WeaponActor.h"
 #include "WeaponItem.generated.h"
 
 class APlayerCharacter;
@@ -48,8 +49,27 @@ public:
 	void EquipWeapon(APlayerCharacter* PlayerCharacter);
 	void UnequipWeapon(APlayerCharacter* PlayerCharacter);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	// Get the spawned weapon actor (can return nullptr if not spawned)
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	AWeaponActor* GetRuntimeActor() const { return RuntimeActor; }
+
+	// Check if weapon has a spawned actor
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	bool HasRuntimeActor() const { return RuntimeActor != nullptr; }
+
+	// Update weapon properties and sync to RuntimeActor if it exists
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetWeaponProperties() 
+	{ 
+		// Sync to RuntimeActor if it exists
+		if (RuntimeActor) 
+		{
+			this->CurrentAmmo = RuntimeActor->CurrentAmmo;
+			this->MaxAmmo = RuntimeActor->MaxAmmo;
+			this->SanityCost = RuntimeActor->SanityCost;
+			this->Damage = RuntimeActor->Damage;
+		}
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetRuntimeActor(AWeaponActor* NewActor) { RuntimeActor = NewActor; }

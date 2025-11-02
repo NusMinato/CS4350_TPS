@@ -2,6 +2,47 @@
 #include "MySavingSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 
+void UMySavingSubsystem::HandlePostLoadMapWithWorld(UWorld* LoadedWorld)
+{
+    if (LoadedWorld->GetMapName().Contains(TEXT("MainMenu"))) return;
+
+    PendingSaveRetries = 0;
+
+    if (LoadedWorld)
+    {
+        // Defer 1 tick to let GameMode/PlayerController/PlayerPawn spawn
+        LoadedWorld->GetTimerManager().SetTimerForNextTick(
+            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
+    }
+}
+
+void UMySavingSubsystem::TrySaveAfterSpawn()
+{
+    UWorld* World = GetWorld();
+    
+    if (!World) return;
+
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(World, 0);
+    APlayerCharacter* PlayerCharacter = PlayerController ? Cast<APlayerCharacter>(PlayerController->GetPawn()) : nullptr;
+
+    if (!PlayerCharacter || !PlayerCharacter->Inventory) {
+        
+        if (++PendingSaveRetries < this->MaxPendingSaveRetries) {
+            World->GetTimerManager().SetTimerForNextTick(
+                FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
+        }
+        else {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SavingSubsystem] Player not ready after %d retries; skip entry autosave."),
+                PendingSaveRetries);
+        }
+
+        return;
+    }
+
+    SaveGame();
+}
+
 bool UMySavingSubsystem::SaveGame()
 {
     UMySaveGame* SaveGame = Cast<UMySaveGame>(
@@ -30,6 +71,7 @@ bool UMySavingSubsystem::SaveGame()
     if (World)
     {
         SaveGame->CurrentLevelName = World->GetName();
+        SaveGame->UnlockedLevels.Add(World->GetName());
     }
     
     // Save player stats
@@ -147,7 +189,14 @@ bool UMySavingSubsystem::LoadGame()
         UE_LOG(LogTemp, Error, TEXT("Failed to load save game"));
         return false;
     }
+
+    if (LoadedSave->CurrentLevelName.IsEmpty()) {
+        UE_LOG(LogTemp, Error, TEXT("Failed to read the game level"));
+        return false;
+    }
     
+    UGameplayStatics::OpenLevel(GetWorld(), FName(*LoadedSave->CurrentLevelName));
+
     // Get player
     APlayerCharacter* Player = Cast<APlayerCharacter>(
         UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
@@ -318,4 +367,20 @@ FDateTime UMySavingSubsystem::GetLastSaveTime() const
     }
     
     return FDateTime::MinValue();
+}
+
+void UMySavingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+    Super::Initialize(Collection);
+    PostLoadMapHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UMySavingSubsystem::HandlePostLoadMapWithWorld);
+}
+
+void UMySavingSubsystem::Deinitialize()
+{
+    if (PostLoadMapHandle.IsValid())
+    {
+        FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(PostLoadMapHandle);
+        PostLoadMapHandle.Reset();
+    }
+    Super::Deinitialize();
 }
