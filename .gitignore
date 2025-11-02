@@ -74,4 +74,13 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 Plugins/UEGitPlugin/git-lfs.exe 
 
+# VS Code workspace file
 TPS.code-workspace
+
+# VS Code - ignore everything except shared config files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
+!.vscode/launch.json

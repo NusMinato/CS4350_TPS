@@ -2,6 +2,7 @@
 
 #include "PlayerCharacter.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Components/InputComponent.h"
 #include "../InventorySystem/ItemPickUpWrapper.h"
 #include "../InventorySystem/Items/Interactable.h"
 #include "../InventorySystem/Items/InventoryComponent.h"
@@ -182,11 +183,7 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
         
         // Sync data back from WeaponActor to WeaponItem before destroying
         if (WeaponActor && WeaponItem) {
-            WeaponItem->CurrentAmmo = WeaponActor->CurrentAmmo;
-            WeaponItem->MaxAmmo = WeaponActor->MaxAmmo;
-            WeaponItem->Damage = WeaponActor->Damage;
-            WeaponItem->SanityCost = WeaponActor->SanityCost;
-            WeaponItem->WeaponType = WeaponActor->WeaponType;
+            WeaponItem->SetWeaponProperties();
             WeaponItem->IsEquipped = false;
             WeaponItem->SetRuntimeActor(nullptr);
         }
@@ -271,75 +268,69 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
     OnEquippedWeaponUpdated.Broadcast();
 }
 
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
-    // Assume "Interact" action mapping is bound to E in project settings:
-    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
-}
-
 void APlayerCharacter::Interact()
 {
-    const float InteractRange = 500.f;    // Maximum interact distance
-    const float InteractRadius = 100.f;    // Larger sphere radius for easier pickup
+    constexpr float InteractRange  = 500.f;
+    constexpr float InteractRadius = 80.f;
 
-    // Start from camera (what you're seeing) and sweep forward
-    const FVector  CamStart = GetPawnViewLocation();
-    const FRotator AimRot = GetBaseAimRotation();
-    const FVector  CamEnd = CamStart + AimRot.Vector() * InteractRange;
+    // Get center-of-screen direction
+    APlayerController* PC = GetController<APlayerController>();
+    if (!PC) return;
 
-    // Sphere sweep from camera forward - picks up what you're looking at
-    FHitResult Hit;
-    FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_Sweep), /*bTraceComplex=*/true, this);
+    int32 ViewportW = 0, ViewportH = 0;
+    PC->GetViewportSize(ViewportW, ViewportH);
+    const FVector2D ScreenCenter(ViewportW * 0.5f, ViewportH * 0.5f);
+
+    FVector WorldOrigin, WorldDir;
+    if (!PC->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldOrigin, WorldDir))
+    {
+        return;
+    }
+
+    const FVector End = WorldOrigin + WorldDir * InteractRange;
+
+    // Setup collision query params
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_CenterScreen), /*bTraceComplex=*/false, this);
     Params.AddIgnoredActor(this);
     TArray<AActor*> AttachedActors;
     GetAttachedActors(AttachedActors);
     Params.AddIgnoredActors(AttachedActors);
 
-    // Use all object types for interaction
-    FCollisionObjectQueryParams ObjParams;
-    // If you want specific channels: ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+    // Object types to interact with
+    FCollisionObjectQueryParams ObjTypes;
+    ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
 
-    const bool bHit = GetWorld()->SweepSingleByObjectType(
-        Hit,
-        CamStart,
-        CamEnd,
+    // Sphere sweep from center of screen - more forgiving for interaction
+    FHitResult Hit;
+    bool bHit = GetWorld()->SweepSingleByObjectType(
+        Hit, 
+        WorldOrigin, 
+        End, 
         FQuat::Identity,
-        ObjParams,
-        FCollisionShape::MakeSphere(InteractRadius),
+        ObjTypes, 
+        FCollisionShape::MakeSphere(InteractRadius), 
         Params
     );
 
-// #if !(UE_BUILD_SHIPPING)
-//     // Draw the interact sweep line from camera
-//     DrawDebugLine(GetWorld(), CamStart, CamEnd, 
-//         bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
-    
-//     // Draw sphere at start (camera position)
-//     DrawDebugSphere(GetWorld(), CamStart, InteractRadius, 12, 
-//         FColor::Yellow, false, 1.f, 0, 1.f);
-    
-//     // Draw sphere at max reach
-//     DrawDebugSphere(GetWorld(), CamEnd, InteractRadius, 12, 
-//         FColor::Blue, false, 1.f, 0, 1.f);
-    
-//     // If hit something, show the hit point
-//     if (bHit)
-//     {
-//         DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, 
-//             FColor::Orange, false, 1.f, 0, 2.f);
-//         DrawDebugString(GetWorld(), Hit.ImpactPoint + FVector(0, 0, 30.f), 
-//             Hit.GetActor() ? Hit.GetActor()->GetName() : TEXT("Unknown"), 
-//             nullptr, FColor::White, 1.f);
-//     }
-// #endif
-
-    if (bHit && Hit.GetActor())
+    if (bHit && Hit.GetActor() && Hit.GetActor()->Implements<UInteractable>())
     {
-        AActor* HitActor = Hit.GetActor();
-        if (HitActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
-        {
-            IInteractable::Execute_Interact(HitActor, this);
-        }
+        IInteractable::Execute_Interact(Hit.GetActor(), this);
     }
+
+#if !(UE_BUILD_SHIPPING)
+    // Debug visualization
+    DrawDebugLine(GetWorld(), WorldOrigin, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.5f);
+    if (bHit)
+    {
+        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, FColor::Orange, false, 1.f, 0, 2.f);
+    }
+#endif
+}
+
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    // Bind Interact action (F key)
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
 }
