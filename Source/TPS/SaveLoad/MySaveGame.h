@@ -67,7 +67,7 @@ public:
     FString CurrentLevelName;
     
     UPROPERTY()
-    TArray<FString> UnlockedLevels;
+    TSet<FString> UnlockedLevels;
     
     UPROPERTY()
     int32 HighestLevelReached = 0;

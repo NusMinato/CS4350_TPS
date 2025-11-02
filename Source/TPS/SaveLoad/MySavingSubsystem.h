@@ -20,6 +20,13 @@ private:
     // Single slot name - always the same
     static constexpr const TCHAR* SaveSlotName = TEXT("GameSave");
     static constexpr int32 UserIndex = 0;
+    int32 PendingSaveRetries = 0;
+    static constexpr int32 MaxPendingSaveRetries = 120; // ~2s at 60fps
+
+    FDelegateHandle PostLoadMapHandle;
+
+    void HandlePostLoadMapWithWorld(UWorld* LoadedWorld);
+    void TrySaveAfterSpawn();
 
 public:
     // Simple API - no slot names needed!
@@ -39,4 +46,7 @@ public:
     // Get last save info
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Saving")
     FDateTime GetLastSaveTime() const;
+
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    virtual void Deinitialize() override;
 };
