@@ -15,6 +15,7 @@ class TPS_API UHealItem : public UItem
 	GENERATED_BODY()
 
 public:
+	UHealItem();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Healing Amount", meta = (ClampMin = "10"))
 	int32 HealAmount = 10;

@@ -43,9 +43,30 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	UInventoryComponent* OwningInventory;
 
+	// Stacking properties
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	bool bIsStackable = false;  // Can this item stack?
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	int32 MaxStackSize = 99;  // Maximum stack size
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
+	int32 Quantity = 1;  // Current quantity in stack
+
+	// Functions
 	virtual void Use(APlayerCharacter* Character);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	void OnUse(APlayerCharacter* Character);
+
+	// Stacking functions
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	bool CanStackWith(const UItem* OtherItem) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	int32 AddQuantity(int32 Amount);  // Returns overflow
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	bool RemoveQuantity(int32 Amount);  // Returns success
 
 };
