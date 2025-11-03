@@ -27,15 +27,6 @@ public:
 	TObjectPtr<UInventoryComponent> Inventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<AWeaponActor> PrimaryWeapon;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<AWeaponActor> SecondaryWeapon;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<AWeaponActor> MeleeWeapon;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponItem> PrimaryWeaponItem;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -101,7 +92,7 @@ public:
 	FVector GetLookAtPoint() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor);
+	void EquipWeapon(UWeaponItem* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void OnWeaponDropped(UWeaponItem* WeaponItem);
