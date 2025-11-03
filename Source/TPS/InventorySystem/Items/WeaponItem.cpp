@@ -72,6 +72,8 @@ void UWeaponItem::SpawnRuntimeActor()
 	WA->MaxAmmo = this->MaxAmmo;
 	WA->Damage = this->Damage;
 	WA->SanityCost = this->SanityCost;
+	WA->WeaponType = this->WeaponType;
+
 
 	this->SetRuntimeActor(WA);
 }
