@@ -34,55 +34,77 @@ void UWeaponItem::EquipWeapon(APlayerCharacter* PlayerCharacter) {
 		return;
 	}
 
-	UWorld* WorldCtx = PlayerCharacter->GetWorld();
-	if (!WorldCtx) 
-	{
-		UE_LOG(LogTemp, Error, TEXT("EquipWeapon FAILED: World context is NULL"));
-		return;
-	}
-	
-	AWeaponActor* SpawnedWeapon = this->RuntimeActor;
-	if (!SpawnedWeapon) {
-		UE_LOG(LogTemp, Warning, TEXT("Spawning new weapon actor from class: %s"), *WeaponActorClass->GetName());
-		UE_LOG(LogTemp, Warning, TEXT("WeaponItem DATA BEFORE SPAWN: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d, SanityCost=%d"), 
-			this->MaxAmmo, this->CurrentAmmo, this->Damage, this->SanityCost);
-		
-		SpawnedWeapon = WorldCtx->SpawnActor<AWeaponActor>(this->WeaponActorClass);
-		if (!SpawnedWeapon) 
-		{
-			UE_LOG(LogTemp, Error, TEXT("SpawnActor FAILED! Could not spawn weapon actor."));
-			return;
-		}
-		
-		UE_LOG(LogTemp, Warning, TEXT("Weapon Actor spawned successfully: %s"), *SpawnedWeapon->GetName());
-		
-		SpawnedWeapon->SourceItem = this;
-		SpawnedWeapon->OwningCharacter = PlayerCharacter;
-		SpawnedWeapon->SetOwner(PlayerCharacter);
-
-		SpawnedWeapon->CurrentAmmo = this->CurrentAmmo;
-		SpawnedWeapon->MaxAmmo = this->MaxAmmo;
-		SpawnedWeapon->SanityCost = this->SanityCost;
-		SpawnedWeapon->WeaponType = this->WeaponType;
-		SpawnedWeapon->Damage = this->Damage;
-		
-		UE_LOG(LogTemp, Warning, TEXT("WeaponActor DATA AFTER COPY: MaxAmmo=%d, CurrentAmmo=%d, Damage=%d, SanityCost=%d"), 
-			SpawnedWeapon->MaxAmmo, SpawnedWeapon->CurrentAmmo, SpawnedWeapon->Damage, SpawnedWeapon->SanityCost);
-		
-		this->SetRuntimeActor(SpawnedWeapon);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Re-equipping existing weapon actor: %s"), *SpawnedWeapon->GetName());
-	}
-	// Blueprint will handle attachment and visibility
-
 	this->IsEquipped = true;
-	PlayerCharacter->EquipWeapon(this, SpawnedWeapon);
+	PlayerCharacter->EquipWeapon(this);
 }
 
 void UWeaponItem::UnequipWeapon(APlayerCharacter* PlayerCharacter) {
+	if (!PlayerCharacter) return;
 	this->IsEquipped = false;
 	// Blueprint will handle detachment and visibility
 	PlayerCharacter->UnequipWeapon(this);
+}
+
+void UWeaponItem::DestroyRuntimeActor()
+{
+	AWeaponActor* WA = this->GetRuntimeActor();
+	if (!WA) return;
+	this->SetWeaponProperties();
+	WA->Destroy();
+	this->SetRuntimeActor(nullptr);
+}
+
+void UWeaponItem::SpawnRuntimeActor()
+{
+	AWeaponActor* WA = this->GetRuntimeActor();
+	if (IsValid(WA)) return;
+	this->SetRuntimeActor(nullptr);
+
+	UWorld* WorldCtx = this->GetWorld();
+	WA = WorldCtx->SpawnActor<AWeaponActor>(this->WeaponActorClass);
+
+	if (!WA) {
+		UE_LOG(LogTemp, Error, TEXT("EquipWeapon FAILED: World context is NULL"));
+	}
+
+	WA->SourceItem = this;
+	WA->CurrentAmmo = this->CurrentAmmo;
+	WA->MaxAmmo = this->MaxAmmo;
+	WA->Damage = this->Damage;
+	WA->SanityCost = this->SanityCost;
+	WA->WeaponType = this->WeaponType;
+
+
+	this->SetRuntimeActor(WA);
+}
+
+void UWeaponItem::EquipRuntimeActor(APlayerCharacter* PC)
+{
+	if (!PC) return;
+
+	// 1) Ensure we have a live runtime actor
+	if (!IsValid(RuntimeActor)) {
+		// Prefer passing PC so you can set owner/instigator and pick the right world
+		this->SpawnRuntimeActor();     // <- implement this to set Owner=PC, etc.
+		AWeaponActor* NewWA = this->GetRuntimeActor();
+		if (!NewWA) return;
+		RuntimeActor = NewWA;
+		// copy properties (ammo, damage, etc.) here
+	}
+
+	// 2) Now make it the active weapon (pulls RuntimeActor from the item)
+	PC->SetActiveWeapon(this);
+}
+
+void UWeaponItem::UnEquipRuntimeActor(APlayerCharacter* PC)
+{
+	if (!PC) return;
+
+	// 1) Stop using it first so UI/abilities stop touching it
+	PC->SetActiveWeapon(nullptr);
+
+	// 2) Then safely destroy and CLEAR THE POINTER
+	if (IsValid(RuntimeActor)) {
+		this->DestroyRuntimeActor();
+	}
 }

@@ -72,6 +72,18 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void DestroyRuntimeActor();
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SpawnRuntimeActor();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EquipRuntimeActor(APlayerCharacter* PC);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UnEquipRuntimeActor(APlayerCharacter* PC);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetRuntimeActor(AWeaponActor* NewActor) { RuntimeActor = NewActor; }
 protected:
 
