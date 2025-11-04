@@ -2,6 +2,7 @@
 
 #include "PlayerCharacter.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Components/InputComponent.h"
 #include "../InventorySystem/ItemPickUpWrapper.h"
 #include "../InventorySystem/Items/Interactable.h"
 #include "../InventorySystem/Items/InventoryComponent.h"
@@ -52,57 +53,31 @@ FVector APlayerCharacter::GetLookAtPoint() const
     return End;
 }
 
-void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
+void APlayerCharacter::EquipWeapon(UWeaponItem* Item)
 {
-    if (!Item || !WeaponActor) return;
+    if (!Item) return;
 
-    TObjectPtr<AWeaponActor> SlotActor = nullptr;
     TObjectPtr<UWeaponItem> SlotItem = nullptr;
 
     // Get the current weapon in the slot
     switch (Item->WeaponType)
     {
     case EMyWeaponType::LongGun:
-        SlotActor = PrimaryWeapon;
         SlotItem = PrimaryWeaponItem;
         break;
     case EMyWeaponType::Pistol:
-        SlotActor = SecondaryWeapon;
         SlotItem = SecondaryWeaponItem;
         break;
     case EMyWeaponType::ColdWeapon:
-        SlotActor = MeleeWeapon;
         SlotItem = MeleeWeaponItem;
         break;
     default:
         return;
     }
 
-    // Check for desync: if we have an item without actor or actor without item, clean up the slot
-    if ((SlotItem && !SlotActor) || (SlotActor && !SlotItem))
-    {
-        // Clear the slot to fix inconsistent state
-        switch (Item->WeaponType)
-        {
-        case EMyWeaponType::LongGun:
-            PrimaryWeapon = nullptr;
-            PrimaryWeaponItem = nullptr;
-            break;
-        case EMyWeaponType::Pistol:
-            SecondaryWeapon = nullptr;
-            SecondaryWeaponItem = nullptr;
-            break;
-        case EMyWeaponType::ColdWeapon:
-            MeleeWeapon = nullptr;
-            MeleeWeaponItem = nullptr;
-            break;
-        }
-        SlotActor = nullptr;
-        SlotItem = nullptr;
-    }
 
     // If clicking the *same* item that's already equipped → unequip it
-    if (SlotItem == Item && SlotActor)
+    if (SlotItem == Item)
     {
         Item->UnequipWeapon(this);
         return;
@@ -115,21 +90,18 @@ void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
     switch (Item->WeaponType)
     {
     case EMyWeaponType::LongGun:
-        PrimaryWeapon = WeaponActor;
         PrimaryWeaponItem = Item;
         break;
     case EMyWeaponType::Pistol:
-        SecondaryWeapon = WeaponActor;
         SecondaryWeaponItem = Item;
         break;
     case EMyWeaponType::ColdWeapon:
-        MeleeWeapon = WeaponActor;
         MeleeWeaponItem = Item;
         break;
     }
 
     // Notify Blueprint to handle attachment and visibility
-    BP_OnWeaponEquipped(Item, WeaponActor);
+    // BP_OnWeaponEquipped(Item, WeaponActor);
     OnEquippedWeaponUpdated.Broadcast();
 }
 
@@ -137,34 +109,26 @@ void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
 {
     if (!WeaponItem || !Inventory) return;
 
-    // Find and clear the weapon from the appropriate slot
-    AWeaponActor* WeaponActor = nullptr;
     
     if (WeaponItem == PrimaryWeaponItem)
     {
-        WeaponActor = PrimaryWeapon;
-        PrimaryWeapon = nullptr;
         PrimaryWeaponItem = nullptr;
     }
     else if (WeaponItem == SecondaryWeaponItem)
     {
-        WeaponActor = SecondaryWeapon;
-        SecondaryWeapon = nullptr;
         SecondaryWeaponItem = nullptr;
     }
     else if (WeaponItem == MeleeWeaponItem)
     {
-        WeaponActor = MeleeWeapon;
-        MeleeWeapon = nullptr;
         MeleeWeaponItem = nullptr;
     }
 
     // Notify Blueprint to handle drop (detach, enable physics, etc.)
-    if (WeaponActor)
-    {
-        BP_OnWeaponDropped(WeaponItem, WeaponActor);
-        WeaponActor->Drop();
-    }
+    //  (WeaponActor)
+    // {
+    //     BP_OnWeaponDropped(WeaponItem, WeaponActor);
+    //     WeaponActor->Drop();
+    // }
     
     // Remove from inventory
     Inventory->RemoveItem(WeaponItem);
@@ -182,11 +146,7 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
         
         // Sync data back from WeaponActor to WeaponItem before destroying
         if (WeaponActor && WeaponItem) {
-            WeaponItem->CurrentAmmo = WeaponActor->CurrentAmmo;
-            WeaponItem->MaxAmmo = WeaponActor->MaxAmmo;
-            WeaponItem->Damage = WeaponActor->Damage;
-            WeaponItem->SanityCost = WeaponActor->SanityCost;
-            WeaponItem->WeaponType = WeaponActor->WeaponType;
+            WeaponItem->SetWeaponProperties();
             WeaponItem->IsEquipped = false;
             WeaponItem->SetRuntimeActor(nullptr);
         }
@@ -202,38 +162,29 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     }
 
     if (WeaponItem == this->PrimaryWeaponItem) {
-        WeaponActor = this->PrimaryWeapon;
-        this->PrimaryWeapon = nullptr;
         this->PrimaryWeaponItem = nullptr;
     }
     else if (WeaponItem == this->SecondaryWeaponItem) {
-        WeaponActor = this->SecondaryWeapon;
-        this->SecondaryWeapon = nullptr;
         this->SecondaryWeaponItem = nullptr;
     }
     else if (WeaponItem == this->MeleeWeaponItem) {
-        WeaponActor = this->MeleeWeapon;
-        this->MeleeWeapon = nullptr;
         this->MeleeWeaponItem = nullptr;
     }
 
     // Notify Blueprint to handle detachment and visibility
-    if (WeaponActor) {
-        BP_OnWeaponUnequipped(WeaponItem, WeaponActor);
-    }
     OnEquippedWeaponUpdated.Broadcast();
 }
 
 TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 {
     TArray<UWeaponItem*> Weapons;
-    if (this->PrimaryWeapon) {
+    if (this->PrimaryWeaponItem) {
         Weapons.Add(this->PrimaryWeaponItem);
     }
-    if (this->SecondaryWeapon) {
+    if (this->SecondaryWeaponItem) {
         Weapons.Add(this->SecondaryWeaponItem);
     }
-    if (this->MeleeWeapon) {
+    if (this->MeleeWeaponItem) {
         Weapons.Add(this->MeleeWeaponItem);
     }
     return Weapons;
@@ -241,7 +192,7 @@ TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 
 void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
 {
-    if (!WeaponItem) 
+    if (!IsValid(WeaponItem)) 
     {
         UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: Clearing active weapon"));
         // Clear active weapon
@@ -271,75 +222,69 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
     OnEquippedWeaponUpdated.Broadcast();
 }
 
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
-    // Assume "Interact" action mapping is bound to E in project settings:
-    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
-}
-
 void APlayerCharacter::Interact()
 {
-    const float InteractRange = 500.f;    // Maximum interact distance
-    const float InteractRadius = 100.f;    // Larger sphere radius for easier pickup
+    constexpr float InteractRange  = 500.f;
+    constexpr float InteractRadius = 80.f;
 
-    // Start from camera (what you're seeing) and sweep forward
-    const FVector  CamStart = GetPawnViewLocation();
-    const FRotator AimRot = GetBaseAimRotation();
-    const FVector  CamEnd = CamStart + AimRot.Vector() * InteractRange;
+    // Get center-of-screen direction
+    APlayerController* PC = GetController<APlayerController>();
+    if (!PC) return;
 
-    // Sphere sweep from camera forward - picks up what you're looking at
-    FHitResult Hit;
-    FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_Sweep), /*bTraceComplex=*/true, this);
+    int32 ViewportW = 0, ViewportH = 0;
+    PC->GetViewportSize(ViewportW, ViewportH);
+    const FVector2D ScreenCenter(ViewportW * 0.5f, ViewportH * 0.5f);
+
+    FVector WorldOrigin, WorldDir;
+    if (!PC->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldOrigin, WorldDir))
+    {
+        return;
+    }
+
+    const FVector End = WorldOrigin + WorldDir * InteractRange;
+
+    // Setup collision query params
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(Interact_CenterScreen), /*bTraceComplex=*/false, this);
     Params.AddIgnoredActor(this);
     TArray<AActor*> AttachedActors;
     GetAttachedActors(AttachedActors);
     Params.AddIgnoredActors(AttachedActors);
 
-    // Use all object types for interaction
-    FCollisionObjectQueryParams ObjParams;
-    // If you want specific channels: ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+    // Object types to interact with
+    FCollisionObjectQueryParams ObjTypes;
+    ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
 
-    const bool bHit = GetWorld()->SweepSingleByObjectType(
-        Hit,
-        CamStart,
-        CamEnd,
+    // Sphere sweep from center of screen - more forgiving for interaction
+    FHitResult Hit;
+    bool bHit = GetWorld()->SweepSingleByObjectType(
+        Hit, 
+        WorldOrigin, 
+        End, 
         FQuat::Identity,
-        ObjParams,
-        FCollisionShape::MakeSphere(InteractRadius),
+        ObjTypes, 
+        FCollisionShape::MakeSphere(InteractRadius), 
         Params
     );
 
-// #if !(UE_BUILD_SHIPPING)
-//     // Draw the interact sweep line from camera
-//     DrawDebugLine(GetWorld(), CamStart, CamEnd, 
-//         bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
-    
-//     // Draw sphere at start (camera position)
-//     DrawDebugSphere(GetWorld(), CamStart, InteractRadius, 12, 
-//         FColor::Yellow, false, 1.f, 0, 1.f);
-    
-//     // Draw sphere at max reach
-//     DrawDebugSphere(GetWorld(), CamEnd, InteractRadius, 12, 
-//         FColor::Blue, false, 1.f, 0, 1.f);
-    
-//     // If hit something, show the hit point
-//     if (bHit)
-//     {
-//         DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, 
-//             FColor::Orange, false, 1.f, 0, 2.f);
-//         DrawDebugString(GetWorld(), Hit.ImpactPoint + FVector(0, 0, 30.f), 
-//             Hit.GetActor() ? Hit.GetActor()->GetName() : TEXT("Unknown"), 
-//             nullptr, FColor::White, 1.f);
-//     }
-// #endif
-
-    if (bHit && Hit.GetActor())
+    if (bHit && Hit.GetActor() && Hit.GetActor()->Implements<UInteractable>())
     {
-        AActor* HitActor = Hit.GetActor();
-        if (HitActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
-        {
-            IInteractable::Execute_Interact(HitActor, this);
-        }
+        IInteractable::Execute_Interact(Hit.GetActor(), this);
     }
+
+#if !(UE_BUILD_SHIPPING)
+    // Debug visualization
+    DrawDebugLine(GetWorld(), WorldOrigin, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.5f);
+    if (bHit)
+    {
+        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, FColor::Orange, false, 1.f, 0, 2.f);
+    }
+#endif
+}
+
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    // Bind Interact action (F key)
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
 }
