@@ -214,11 +214,8 @@ bool UMySavingSubsystem::LoadGame()
     // Clear weapon slots and inventory
     Player->Inventory->Clear();
     Player->PrimaryWeaponItem = nullptr;
-    Player->PrimaryWeapon = nullptr;
     Player->SecondaryWeaponItem = nullptr;
-    Player->SecondaryWeapon = nullptr;
     Player->MeleeWeaponItem = nullptr;
-    Player->MeleeWeapon = nullptr;
     Player->ActiveWeaponItem = nullptr;
     Player->ActiveWeapon = nullptr;
     
