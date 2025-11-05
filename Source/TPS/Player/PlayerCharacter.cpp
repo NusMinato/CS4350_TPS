@@ -53,57 +53,31 @@ FVector APlayerCharacter::GetLookAtPoint() const
     return End;
 }
 
-void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
+void APlayerCharacter::EquipWeapon(UWeaponItem* Item)
 {
-    if (!Item || !WeaponActor) return;
+    if (!Item) return;
 
-    TObjectPtr<AWeaponActor> SlotActor = nullptr;
     TObjectPtr<UWeaponItem> SlotItem = nullptr;
 
     // Get the current weapon in the slot
     switch (Item->WeaponType)
     {
     case EMyWeaponType::LongGun:
-        SlotActor = PrimaryWeapon;
         SlotItem = PrimaryWeaponItem;
         break;
     case EMyWeaponType::Pistol:
-        SlotActor = SecondaryWeapon;
         SlotItem = SecondaryWeaponItem;
         break;
     case EMyWeaponType::ColdWeapon:
-        SlotActor = MeleeWeapon;
         SlotItem = MeleeWeaponItem;
         break;
     default:
         return;
     }
 
-    // Check for desync: if we have an item without actor or actor without item, clean up the slot
-    if ((SlotItem && !SlotActor) || (SlotActor && !SlotItem))
-    {
-        // Clear the slot to fix inconsistent state
-        switch (Item->WeaponType)
-        {
-        case EMyWeaponType::LongGun:
-            PrimaryWeapon = nullptr;
-            PrimaryWeaponItem = nullptr;
-            break;
-        case EMyWeaponType::Pistol:
-            SecondaryWeapon = nullptr;
-            SecondaryWeaponItem = nullptr;
-            break;
-        case EMyWeaponType::ColdWeapon:
-            MeleeWeapon = nullptr;
-            MeleeWeaponItem = nullptr;
-            break;
-        }
-        SlotActor = nullptr;
-        SlotItem = nullptr;
-    }
 
     // If clicking the *same* item that's already equipped → unequip it
-    if (SlotItem == Item && SlotActor)
+    if (SlotItem == Item)
     {
         Item->UnequipWeapon(this);
         return;
@@ -116,21 +90,18 @@ void APlayerCharacter::EquipWeapon(UWeaponItem* Item, AWeaponActor* WeaponActor)
     switch (Item->WeaponType)
     {
     case EMyWeaponType::LongGun:
-        PrimaryWeapon = WeaponActor;
         PrimaryWeaponItem = Item;
         break;
     case EMyWeaponType::Pistol:
-        SecondaryWeapon = WeaponActor;
         SecondaryWeaponItem = Item;
         break;
     case EMyWeaponType::ColdWeapon:
-        MeleeWeapon = WeaponActor;
         MeleeWeaponItem = Item;
         break;
     }
 
     // Notify Blueprint to handle attachment and visibility
-    BP_OnWeaponEquipped(Item, WeaponActor);
+    // BP_OnWeaponEquipped(Item, WeaponActor);
     OnEquippedWeaponUpdated.Broadcast();
 }
 
@@ -138,34 +109,26 @@ void APlayerCharacter::OnWeaponDropped(UWeaponItem* WeaponItem)
 {
     if (!WeaponItem || !Inventory) return;
 
-    // Find and clear the weapon from the appropriate slot
-    AWeaponActor* WeaponActor = nullptr;
     
     if (WeaponItem == PrimaryWeaponItem)
     {
-        WeaponActor = PrimaryWeapon;
-        PrimaryWeapon = nullptr;
         PrimaryWeaponItem = nullptr;
     }
     else if (WeaponItem == SecondaryWeaponItem)
     {
-        WeaponActor = SecondaryWeapon;
-        SecondaryWeapon = nullptr;
         SecondaryWeaponItem = nullptr;
     }
     else if (WeaponItem == MeleeWeaponItem)
     {
-        WeaponActor = MeleeWeapon;
-        MeleeWeapon = nullptr;
         MeleeWeaponItem = nullptr;
     }
 
     // Notify Blueprint to handle drop (detach, enable physics, etc.)
-    if (WeaponActor)
-    {
-        BP_OnWeaponDropped(WeaponItem, WeaponActor);
-        WeaponActor->Drop();
-    }
+    //  (WeaponActor)
+    // {
+    //     BP_OnWeaponDropped(WeaponItem, WeaponActor);
+    //     WeaponActor->Drop();
+    // }
     
     // Remove from inventory
     Inventory->RemoveItem(WeaponItem);
@@ -199,38 +162,29 @@ void APlayerCharacter::UnequipWeapon(UWeaponItem* WeaponItem)
     }
 
     if (WeaponItem == this->PrimaryWeaponItem) {
-        WeaponActor = this->PrimaryWeapon;
-        this->PrimaryWeapon = nullptr;
         this->PrimaryWeaponItem = nullptr;
     }
     else if (WeaponItem == this->SecondaryWeaponItem) {
-        WeaponActor = this->SecondaryWeapon;
-        this->SecondaryWeapon = nullptr;
         this->SecondaryWeaponItem = nullptr;
     }
     else if (WeaponItem == this->MeleeWeaponItem) {
-        WeaponActor = this->MeleeWeapon;
-        this->MeleeWeapon = nullptr;
         this->MeleeWeaponItem = nullptr;
     }
 
     // Notify Blueprint to handle detachment and visibility
-    if (WeaponActor) {
-        BP_OnWeaponUnequipped(WeaponItem, WeaponActor);
-    }
     OnEquippedWeaponUpdated.Broadcast();
 }
 
 TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 {
     TArray<UWeaponItem*> Weapons;
-    if (this->PrimaryWeapon) {
+    if (this->PrimaryWeaponItem) {
         Weapons.Add(this->PrimaryWeaponItem);
     }
-    if (this->SecondaryWeapon) {
+    if (this->SecondaryWeaponItem) {
         Weapons.Add(this->SecondaryWeaponItem);
     }
-    if (this->MeleeWeapon) {
+    if (this->MeleeWeaponItem) {
         Weapons.Add(this->MeleeWeaponItem);
     }
     return Weapons;
@@ -238,7 +192,7 @@ TArray<UWeaponItem*> APlayerCharacter::GetAllWeapons()
 
 void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
 {
-    if (!WeaponItem) 
+    if (!IsValid(WeaponItem)) 
     {
         UE_LOG(LogTemp, Warning, TEXT("SetActiveWeapon: Clearing active weapon"));
         // Clear active weapon

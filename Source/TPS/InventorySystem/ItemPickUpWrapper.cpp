@@ -34,26 +34,28 @@ void AItemPickUpWrapper::OnPickUp(APlayerCharacter* PlayerCharacter)
     if (!PlayerCharacter || !PlayerCharacter->Inventory || !this->WrappedItem) return;
     SetActorEnableCollision(false); // prevent double pickup
 
+    // 1) Duplicate into a safe owner (the InventoryComponent) BEFORE destroying the wrapper
+    UItem* NewItem = DuplicateObject<UItem>(this->WrappedItem, PlayerCharacter->Inventory);
 
-    // Add the item to the inventory
-    if (PlayerCharacter->Inventory->AddItem(this->WrappedItem))
+    // 2) Add the duplicated item
+    if (PlayerCharacter->Inventory->AddItem(NewItem))
     {
-        // If it's a weapon, immediately use (equip) it
-        if (this->WrappedItem->IsA<UWeaponItem>())
+        // 3) Auto-equip weapons using the duplicated pointer (not the old one)
+        if (NewItem->IsA<UWeaponItem>())
         {
-            PlayerCharacter->UseItem(this->WrappedItem);  // This calls UWeaponItem::Use, spawning the actor
+            PlayerCharacter->UseItem(NewItem);
         }
-        // Remove the item from the wrapper and destroy pickup actor
+
+        // Safe to remove the pickup actor now
         this->WrappedItem = nullptr;
         Destroy();
     }
     else
     {
-        // If add failed (e.g., inventory full for non-weapons), re-enable collision so it can be picked up later
+        // If add failed, allow another try
         SetActorEnableCollision(true);
     }
 }
-
 
 void AItemPickUpWrapper::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor, UPrimitiveComponent* OtherComp,
