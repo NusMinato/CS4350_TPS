@@ -20,13 +20,23 @@ private:
     // Single slot name - always the same
     static constexpr const TCHAR* SaveSlotName = TEXT("GameSave");
     static constexpr int32 UserIndex = 0;
+
+    UPROPERTY() 
+    UMySaveGame* PendingLoadedSave = nullptr;
+    
+    bool  bApplyLoadAfterTravel = false;
     int32 PendingSaveRetries = 0;
+    int32 PendingLoadRetries = 0;
     static constexpr int32 MaxPendingSaveRetries = 120; // ~2s at 60fps
+    static constexpr int32 MaxPendingLoadRetries = 120;
 
     FDelegateHandle PostLoadMapHandle;
 
     void HandlePostLoadMapWithWorld(UWorld* LoadedWorld);
     void TrySaveAfterSpawn();
+
+    void TryApplyAfterTravel();                // waits for pawn then applies
+    bool ApplyLoadedSave(UMySaveGame* LoadedSave);   // your current apply body, moved here
 
 public:
     // Simple API - no slot names needed!

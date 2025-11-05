@@ -4,6 +4,16 @@
 
 void UMySavingSubsystem::HandlePostLoadMapWithWorld(UWorld* LoadedWorld)
 {
+    if (!LoadedWorld) return;
+
+    if (bApplyLoadAfterTravel && PendingLoadedSave)
+    {
+        PendingLoadRetries = 0;
+        LoadedWorld->GetTimerManager().SetTimerForNextTick(
+            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TryApplyAfterTravel));
+        return;
+    }
+
     if (LoadedWorld->GetMapName().Contains(TEXT("MainMenu"))) return;
 
     PendingSaveRetries = 0;
@@ -43,6 +53,165 @@ void UMySavingSubsystem::TrySaveAfterSpawn()
     SaveGame();
 }
 
+void UMySavingSubsystem::TryApplyAfterTravel()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+    APlayerCharacter* Player = PC ? Cast<APlayerCharacter>(PC->GetPawn()) : nullptr;
+
+    if (Player && Player->Inventory && PendingLoadedSave)
+    {
+        ApplyLoadedSave(PendingLoadedSave);
+        PendingLoadedSave = nullptr;
+        bApplyLoadAfterTravel = false;
+        return;
+    }
+
+    if (++PendingLoadRetries <= MaxPendingLoadRetries)
+    {
+        World->GetTimerManager().SetTimerForNextTick(
+            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TryApplyAfterTravel));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Player not ready after travel; skipping load apply."));
+        PendingLoadedSave = nullptr;
+        bApplyLoadAfterTravel = false;
+    }
+}
+
+bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
+{
+    APlayerCharacter* Player = Cast<APlayerCharacter>(
+        UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+
+    if (!Player || !Player->Inventory)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Player or inventory not found"));
+        return false;
+    }
+
+    // Apply player stats
+    Player->SetHealth(LoadedSave->CurrentHealth);
+    Player->SetSanity(LoadedSave->CurrentSanity);
+
+    // Clear weapon slots and inventory
+    Player->Inventory->Clear();
+    Player->PrimaryWeaponItem = nullptr;
+    Player->SecondaryWeaponItem = nullptr;
+    Player->MeleeWeaponItem = nullptr;
+    Player->ActiveWeaponItem = nullptr;
+    Player->ActiveWeapon = nullptr;
+
+    // Track loaded weapons for active weapon restoration
+    TArray<UWeaponItem*> LoadedWeapons;
+
+    // Load weapons
+    for (const FWeaponSaveData& Data : LoadedSave->WeaponData)
+    {
+        UClass* WeaponClass = StaticLoadClass(
+            UWeaponItem::StaticClass(), nullptr, *Data.WeaponClassName);
+
+        if (!WeaponClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to load weapon class: %s"), *Data.WeaponClassName);
+            continue;
+        }
+
+        UWeaponItem* NewWeapon = NewObject<UWeaponItem>(Player->Inventory, WeaponClass);
+
+        if (!NewWeapon)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create weapon: %s"), *Data.WeaponClassName);
+            continue;
+        }
+
+        // Restore weapon data
+        NewWeapon->CurrentAmmo = Data.CurrentAmmo;
+        NewWeapon->MaxAmmo = Data.MaxAmmo;
+        NewWeapon->Damage = Data.Damage;
+        NewWeapon->SanityCost = Data.SanityCost;
+        NewWeapon->WeaponType = static_cast<EMyWeaponType>(Data.WeaponType);
+        NewWeapon->IsEquipped = Data.bIsEquipped;
+
+        // Add to general inventory
+        Player->Inventory->AddItem(NewWeapon);
+
+        // If equipped, assign to appropriate weapon slot
+        if (Data.bIsEquipped)
+        {
+            switch (NewWeapon->WeaponType)
+            {
+            case EMyWeaponType::LongGun:
+                Player->PrimaryWeaponItem = NewWeapon;
+                break;
+            case EMyWeaponType::Pistol:
+                Player->SecondaryWeaponItem = NewWeapon;
+                break;
+            case EMyWeaponType::ColdWeapon:
+                Player->MeleeWeaponItem = NewWeapon;
+                break;
+            }
+            UE_LOG(LogTemp, Log, TEXT("Weapon equipped to slot: %s"), *NewWeapon->GetClass()->GetName());
+        }
+
+        LoadedWeapons.Add(NewWeapon);
+
+        UE_LOG(LogTemp, Log, TEXT("Loaded weapon: %s (Equipped: %s, Ammo: %d/%d)"),
+            *Data.WeaponClassName,
+            Data.bIsEquipped ? TEXT("Yes") : TEXT("No"),
+            NewWeapon->CurrentAmmo, NewWeapon->MaxAmmo);
+    }
+
+    // Restore active weapon (the one held in hand)
+    if (LoadedSave->ActiveWeaponIndex >= 0 &&
+        LoadedSave->ActiveWeaponIndex < LoadedWeapons.Num())
+    {
+        UWeaponItem* ActiveWeapon = LoadedWeapons[LoadedSave->ActiveWeaponIndex];
+
+        // SetActiveWeapon will spawn the RuntimeActor and attach to player
+        Player->SetActiveWeapon(ActiveWeapon);
+
+        UE_LOG(LogTemp, Log, TEXT("Active weapon restored and attached: %s"),
+            *ActiveWeapon->GetClass()->GetName());
+    }
+
+    // Load regular items (potions, consumables, etc.)
+    for (const FItemSaveData& Data : LoadedSave->ItemData)
+    {
+        UClass* ItemClass = StaticLoadClass(
+            UItem::StaticClass(), nullptr, *Data.ItemClassName);
+
+        if (!ItemClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to load item class: %s"), *Data.ItemClassName);
+            continue;
+        }
+
+        // Create ONE item instance with the saved quantity
+        UItem* NewItem = NewObject<UItem>(Player->Inventory, ItemClass);
+
+        if (!NewItem)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create item: %s"), *Data.ItemClassName);
+            continue;
+        }
+
+        // Set quantity from save data
+        NewItem->Quantity = Data.Quantity;
+
+        // Add to inventory (will stack if appropriate)
+        Player->Inventory->AddItem(NewItem);
+
+        UE_LOG(LogTemp, Log, TEXT("Loaded item: %s x%d"), *Data.ItemClassName, Data.Quantity);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Game loaded successfully"));
+    return true;
+}
+
 bool UMySavingSubsystem::SaveGame()
 {
     UMySaveGame* SaveGame = Cast<UMySaveGame>(
@@ -70,8 +239,8 @@ bool UMySavingSubsystem::SaveGame()
     UWorld* World = GetWorld();
     if (World)
     {
-        SaveGame->CurrentLevelName = World->GetName();
-        SaveGame->UnlockedLevels.Add(World->GetName());
+        SaveGame->CurrentLevelName = UGameplayStatics::GetCurrentLevelName(World, /*bRemovePrefix=*/true);
+        SaveGame->UnlockedLevels.Add(SaveGame->CurrentLevelName);
     }
     
     // Save player stats
@@ -175,155 +344,24 @@ bool UMySavingSubsystem::SaveGame()
 
 bool UMySavingSubsystem::LoadGame()
 {
-    if (!DoesSaveExist())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No save game exists"));
-        return false;
-    }
-    
-    UMySaveGame* LoadedSave = Cast<UMySaveGame>(
+    if (!DoesSaveExist()) { UE_LOG(LogTemp, Warning, TEXT("No save")); return false; }
+
+    UMySaveGame* Loaded = Cast<UMySaveGame>(
         UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
-    
-    if (!LoadedSave)
+    if (!Loaded) { UE_LOG(LogTemp, Error, TEXT("Load failed")); return false; }
+
+    if (Loaded->CurrentLevelName.IsEmpty())
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to load save game"));
+        UE_LOG(LogTemp, Error, TEXT("Saved level name empty")); 
         return false;
     }
 
-    if (LoadedSave->CurrentLevelName.IsEmpty()) {
-        UE_LOG(LogTemp, Error, TEXT("Failed to read the game level"));
-        return false;
-    }
-    
-    UGameplayStatics::OpenLevel(GetWorld(), FName(*LoadedSave->CurrentLevelName));
+    // Always travel (even if the current map is the same) so we respawn at level entry
+    PendingLoadedSave     = Loaded;
+    bApplyLoadAfterTravel = true;
 
-    // Get player
-    APlayerCharacter* Player = Cast<APlayerCharacter>(
-        UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-    
-    if (!Player || !Player->Inventory)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Player or inventory not found"));
-        return false;
-    }
-    
-    // Apply player stats
-    Player->SetHealth(LoadedSave->CurrentHealth);
-    Player->SetSanity(LoadedSave->CurrentSanity);
-    
-    // Clear weapon slots and inventory
-    Player->Inventory->Clear();
-    Player->PrimaryWeaponItem = nullptr;
-    Player->SecondaryWeaponItem = nullptr;
-    Player->MeleeWeaponItem = nullptr;
-    Player->ActiveWeaponItem = nullptr;
-    Player->ActiveWeapon = nullptr;
-    
-    // Track loaded weapons for active weapon restoration
-    TArray<UWeaponItem*> LoadedWeapons;
-    
-    // Load weapons
-    for (const FWeaponSaveData& Data : LoadedSave->WeaponData)
-    {
-        UClass* WeaponClass = StaticLoadClass(
-            UWeaponItem::StaticClass(), nullptr, *Data.WeaponClassName);
-        
-        if (!WeaponClass)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to load weapon class: %s"), *Data.WeaponClassName);
-            continue;
-        }
-        
-        UWeaponItem* NewWeapon = NewObject<UWeaponItem>(Player->Inventory, WeaponClass);
-        
-        if (!NewWeapon)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to create weapon: %s"), *Data.WeaponClassName);
-            continue;
-        }
-        
-        // Restore weapon data
-        NewWeapon->CurrentAmmo = Data.CurrentAmmo;
-        NewWeapon->MaxAmmo = Data.MaxAmmo;
-        NewWeapon->Damage = Data.Damage;
-        NewWeapon->SanityCost = Data.SanityCost;
-        NewWeapon->WeaponType = static_cast<EMyWeaponType>(Data.WeaponType);
-        NewWeapon->IsEquipped = Data.bIsEquipped;
-        
-        // Add to general inventory
-        Player->Inventory->AddItem(NewWeapon);
-        
-        // If equipped, assign to appropriate weapon slot
-        if (Data.bIsEquipped)
-        {
-            switch (NewWeapon->WeaponType)
-            {
-            case EMyWeaponType::LongGun:
-                Player->PrimaryWeaponItem = NewWeapon;
-                break;
-            case EMyWeaponType::Pistol:
-                Player->SecondaryWeaponItem = NewWeapon;
-                break;
-            case EMyWeaponType::ColdWeapon:
-                Player->MeleeWeaponItem = NewWeapon;
-                break;
-            }
-            UE_LOG(LogTemp, Log, TEXT("Weapon equipped to slot: %s"), *NewWeapon->GetClass()->GetName());
-        }
-        
-        LoadedWeapons.Add(NewWeapon);
-        
-        UE_LOG(LogTemp, Log, TEXT("Loaded weapon: %s (Equipped: %s, Ammo: %d/%d)"), 
-            *Data.WeaponClassName, 
-            Data.bIsEquipped ? TEXT("Yes") : TEXT("No"),
-            NewWeapon->CurrentAmmo, NewWeapon->MaxAmmo);
-    }
-    
-    // Restore active weapon (the one held in hand)
-    if (LoadedSave->ActiveWeaponIndex >= 0 && 
-        LoadedSave->ActiveWeaponIndex < LoadedWeapons.Num())
-    {
-        UWeaponItem* ActiveWeapon = LoadedWeapons[LoadedSave->ActiveWeaponIndex];
-        
-        // SetActiveWeapon will spawn the RuntimeActor and attach to player
-        Player->SetActiveWeapon(ActiveWeapon);
-        
-        UE_LOG(LogTemp, Log, TEXT("Active weapon restored and attached: %s"), 
-            *ActiveWeapon->GetClass()->GetName());
-    }
-    
-    // Load regular items (potions, consumables, etc.)
-    for (const FItemSaveData& Data : LoadedSave->ItemData)
-    {
-        UClass* ItemClass = StaticLoadClass(
-            UItem::StaticClass(), nullptr, *Data.ItemClassName);
-        
-        if (!ItemClass)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to load item class: %s"), *Data.ItemClassName);
-            continue;
-        }
-        
-        // Create ONE item instance with the saved quantity
-        UItem* NewItem = NewObject<UItem>(Player->Inventory, ItemClass);
-        
-        if (!NewItem)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to create item: %s"), *Data.ItemClassName);
-            continue;
-        }
-        
-        // Set quantity from save data
-        NewItem->Quantity = Data.Quantity;
-        
-        // Add to inventory (will stack if appropriate)
-        Player->Inventory->AddItem(NewItem);
-        
-        UE_LOG(LogTemp, Log, TEXT("Loaded item: %s x%d"), *Data.ItemClassName, Data.Quantity);
-    }
-    
-    UE_LOG(LogTemp, Log, TEXT("Game loaded successfully"));
-    return true;
+    UGameplayStatics::OpenLevel(GetWorld(), FName(*Loaded->CurrentLevelName));
+    return true; // important: return immediately; old world is tearing down
 }
 
 bool UMySavingSubsystem::DoesSaveExist() const
