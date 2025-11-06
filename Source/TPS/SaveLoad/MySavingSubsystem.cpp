@@ -6,6 +6,7 @@ void UMySavingSubsystem::HandlePostLoadMapWithWorld(UWorld* LoadedWorld)
 {
     if (!LoadedWorld) return;
 
+    // Handle load after travel first (allows loading from MainMenu)
     if (bApplyLoadAfterTravel && PendingLoadedSave)
     {
         PendingLoadRetries = 0;
@@ -14,16 +15,13 @@ void UMySavingSubsystem::HandlePostLoadMapWithWorld(UWorld* LoadedWorld)
         return;
     }
 
+    // Skip autosave for MainMenu (but allow loads from MainMenu to proceed above)
     if (LoadedWorld->GetMapName().Contains(TEXT("MainMenu"))) return;
 
+    // Trigger save after loading a new map
     PendingSaveRetries = 0;
-
-    if (LoadedWorld)
-    {
-        // Defer 1 tick to let GameMode/PlayerController/PlayerPawn spawn
-        LoadedWorld->GetTimerManager().SetTimerForNextTick(
-            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
-    }
+    LoadedWorld->GetTimerManager().SetTimerForNextTick(
+        FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
 }
 
 void UMySavingSubsystem::TrySaveAfterSpawn()
@@ -63,23 +61,35 @@ void UMySavingSubsystem::TryApplyAfterTravel()
 
     if (Player && Player->Inventory && PendingLoadedSave)
     {
+        // Successfully apply the loaded save
         ApplyLoadedSave(PendingLoadedSave);
         PendingLoadedSave = nullptr;
         bApplyLoadAfterTravel = false;
+        
+        // Trigger save after successful load
+        PendingSaveRetries = 0;
+        World->GetTimerManager().SetTimerForNextTick(
+            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
         return;
     }
 
-    if (++PendingLoadRetries <= MaxPendingLoadRetries)
+    // Retry if we haven't exceeded max retries
+    if (++PendingLoadRetries < MaxPendingLoadRetries)
     {
         World->GetTimerManager().SetTimerForNextTick(
             FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TryApplyAfterTravel));
+        return;
     }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Player not ready after travel; skipping load apply."));
-        PendingLoadedSave = nullptr;
-        bApplyLoadAfterTravel = false;
-    }
+
+    // Failed after all retries
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Player not ready after %d retries; skipping load apply."), PendingLoadRetries);
+    PendingLoadedSave = nullptr;
+    bApplyLoadAfterTravel = false;
+    
+    // Still try to save even if load failed (in case player exists but inventory wasn't ready)
+    PendingSaveRetries = 0;
+    World->GetTimerManager().SetTimerForNextTick(
+        FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
 }
 
 bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
@@ -172,6 +182,7 @@ bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
         UWeaponItem* ActiveWeapon = LoadedWeapons[LoadedSave->ActiveWeaponIndex];
 
         // SetActiveWeapon will spawn the RuntimeActor and attach to player
+        ActiveWeapon->SpawnRuntimeActor();
         Player->SetActiveWeapon(ActiveWeapon);
 
         UE_LOG(LogTemp, Log, TEXT("Active weapon restored and attached: %s"),
@@ -384,6 +395,23 @@ bool UMySavingSubsystem::DeleteSave()
     }
     
     return bSuccess;
+}
+
+void UMySavingSubsystem::OpenLevelWithCarryOver(FString LevelName)
+{
+    // 1) Snapshot current player into the normal save slot
+    if (!SaveGame()) return;
+
+    // 2) Keep it in memory and mark that we should apply after travel
+    PendingLoadedSave = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+    
+    if (!PendingLoadedSave) { UE_LOG(LogTemp, Error, TEXT("Failed to load save game")); return; }
+
+    PendingLoadedSave->CurrentLevelName = LevelName;
+    bApplyLoadAfterTravel = true;
+
+    // 3) Travel
+    UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName));
 }
 
 FDateTime UMySavingSubsystem::GetLastSaveTime() const

@@ -52,6 +52,9 @@ public:
     
     UFUNCTION(BlueprintCallable, Category = "Saving")
     bool DeleteSave();
+
+    UFUNCTION(BlueprintCallable, Category = "Saving")
+    void OpenLevelWithCarryOver(FString LevelName);
     
     // Get last save info
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Saving")
