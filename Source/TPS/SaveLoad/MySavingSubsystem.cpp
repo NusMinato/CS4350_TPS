@@ -106,6 +106,7 @@ bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
     // Apply player stats
     Player->SetHealth(LoadedSave->CurrentHealth);
     Player->SetSanity(LoadedSave->CurrentSanity);
+    Player->BP_OnStatusUpdated(Player->GetHealth(), Player->GetSanity());
 
     // Clear weapon slots and inventory
     Player->Inventory->Clear();
@@ -184,6 +185,7 @@ bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
         // SetActiveWeapon will spawn the RuntimeActor and attach to player
         ActiveWeapon->SpawnRuntimeActor();
         Player->SetActiveWeapon(ActiveWeapon);
+        Player->BP_OnWeaponEquipped(ActiveWeapon);
 
         UE_LOG(LogTemp, Log, TEXT("Active weapon restored and attached: %s"),
             *ActiveWeapon->GetClass()->GetName());

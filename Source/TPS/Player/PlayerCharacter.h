@@ -108,13 +108,16 @@ public:
 
 	// Blueprint events for weapon attachment/visibility management
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
-	void BP_OnWeaponEquipped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+	void BP_OnWeaponEquipped(UWeaponItem* WeaponItem);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
-	void BP_OnWeaponUnequipped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+	void BP_OnWeaponUnequipped(UWeaponItem* WeaponItem);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
-	void BP_OnWeaponDropped(UWeaponItem* WeaponItem, AWeaponActor* WeaponActor);
+	void BP_OnWeaponDropped(UWeaponItem* WeaponItem);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Status Updates")
+	void BP_OnStatusUpdated(int32 Health, int32 Sanity);
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnEquippedWeaponUpdated OnEquippedWeaponUpdated;
