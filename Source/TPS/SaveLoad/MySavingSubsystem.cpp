@@ -36,9 +36,6 @@ void UMySavingSubsystem::TrySaveAfterSpawn()
     if (!PlayerCharacter || !PlayerCharacter->Inventory) {
         
         if (++PendingSaveRetries < this->MaxPendingSaveRetries) {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SavingSubsystem] TrySaveAfterSpawn retry %d: Player not ready yet"),
-                PendingSaveRetries);
             World->GetTimerManager().SetTimerForNextTick(
                 FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
         }
@@ -51,7 +48,6 @@ void UMySavingSubsystem::TrySaveAfterSpawn()
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TrySaveAfterSpawn: Player ready, calling SaveGame()"));
     SaveGame();
 }
 
@@ -65,11 +61,8 @@ void UMySavingSubsystem::TryApplyAfterTravel()
 
     if (Player && Player->Inventory && PendingLoadedSave)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TryApplyAfterTravel: Player and Inventory ready, applying save..."));
-        
         if (ApplyLoadedSave(PendingLoadedSave))
         {
-            UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave succeeded, clearing pending state"));
             PendingLoadedSave = nullptr;
             bApplyLoadAfterTravel = false;
             PendingLoadRetries = 0;
@@ -79,19 +72,10 @@ void UMySavingSubsystem::TryApplyAfterTravel()
             PendingSaveRetries = 0;
             World->GetTimerManager().SetTimerForNextTick(
                 FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
-            
-            UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Scheduled save for next tick after level travel"));
             return;
         }
 
-        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave returned false; will retry."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TryApplyAfterTravel: Player=%s, Inventory=%s, PendingLoadedSave=%s"),
-            Player ? TEXT("Valid") : TEXT("NULL"),
-            (Player && Player->Inventory) ? TEXT("Valid") : TEXT("NULL"),
-            PendingLoadedSave ? TEXT("Valid") : TEXT("NULL"));
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave failed; will retry."));
     }
 
     // Retry if we haven't exceeded max retries
@@ -433,16 +417,12 @@ bool UMySavingSubsystem::DeleteSave()
 
 void UMySavingSubsystem::OpenLevelWithCarryOver(FString LevelName)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] OpenLevelWithCarryOver called for level: %s"), *LevelName);
-    
     // 1) Snapshot current player into the normal save slot
     if (!SaveGame()) 
     {
-        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to save before level travel"));
+        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to save before level travel to %s"), *LevelName);
         return;
     }
-
-    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Pre-travel save succeeded, loading into memory..."));
 
     // 2) Keep it in memory and mark that we should apply after travel
     PendingLoadedSave = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
@@ -453,13 +433,8 @@ void UMySavingSubsystem::OpenLevelWithCarryOver(FString LevelName)
         return; 
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Loaded save from level: %s, updating to: %s"), 
-        *PendingLoadedSave->CurrentLevelName, *LevelName);
-
     PendingLoadedSave->CurrentLevelName = LevelName;
     bApplyLoadAfterTravel = true;
-
-    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Opening level: %s"), *LevelName);
     
     // 3) Travel
     UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName));
