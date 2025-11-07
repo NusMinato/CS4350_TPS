@@ -227,6 +227,9 @@ bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
 
 bool UMySavingSubsystem::SaveGame()
 {
+    FDateTime DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to save game: %s"), *DateTime.ToString());
+
     UMySaveGame* SaveGame = Cast<UMySaveGame>(
         UGameplayStatics::CreateSaveGameObject(UMySaveGame::StaticClass()));
     
@@ -345,11 +348,13 @@ bool UMySavingSubsystem::SaveGame()
     
     if (bSuccess)
     {
-        UE_LOG(LogTemp, Log, TEXT("Game saved successfully"));
+        FDateTime DateTime = FDateTime::Now();
+        UE_LOG(LogTemp, Log, TEXT("Game saved successfully: %s"), *DateTime.ToString());
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to save game"));
+        FDateTime DateTime = FDateTime::Now();
+        UE_LOG(LogTemp, Error, TEXT("Failed to save game: %s"), *DateTime.ToString());
     }
     
     return bSuccess;
@@ -357,6 +362,9 @@ bool UMySavingSubsystem::SaveGame()
 
 bool UMySavingSubsystem::LoadGame()
 {
+    FDateTime DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to load game: %s"), *DateTime.ToString());
+
     if (!DoesSaveExist()) { UE_LOG(LogTemp, Warning, TEXT("No save")); return false; }
 
     UMySaveGame* Loaded = Cast<UMySaveGame>(
@@ -372,6 +380,9 @@ bool UMySavingSubsystem::LoadGame()
     // Always travel (even if the current map is the same) so we respawn at level entry
     PendingLoadedSave     = Loaded;
     bApplyLoadAfterTravel = true;
+
+    FDateTime DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to open level: %s"), *DateTime.ToString());
 
     UGameplayStatics::OpenLevel(GetWorld(), FName(*Loaded->CurrentLevelName));
     return true; // important: return immediately; old world is tearing down
