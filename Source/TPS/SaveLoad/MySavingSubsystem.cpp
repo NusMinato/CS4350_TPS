@@ -348,12 +348,12 @@ bool UMySavingSubsystem::SaveGame()
     
     if (bSuccess)
     {
-        FDateTime DateTime = FDateTime::Now();
+        DateTime = FDateTime::Now();
         UE_LOG(LogTemp, Log, TEXT("Game saved successfully: %s"), *DateTime.ToString());
     }
     else
     {
-        FDateTime DateTime = FDateTime::Now();
+        DateTime = FDateTime::Now();
         UE_LOG(LogTemp, Error, TEXT("Failed to save game: %s"), *DateTime.ToString());
     }
     
@@ -381,7 +381,7 @@ bool UMySavingSubsystem::LoadGame()
     PendingLoadedSave     = Loaded;
     bApplyLoadAfterTravel = true;
 
-    FDateTime DateTime = FDateTime::Now();
+    DateTime = FDateTime::Now();
     UE_LOG(LogTemp, Error, TEXT("Attempting to open level: %s"), *DateTime.ToString());
 
     UGameplayStatics::OpenLevel(GetWorld(), FName(*Loaded->CurrentLevelName));
