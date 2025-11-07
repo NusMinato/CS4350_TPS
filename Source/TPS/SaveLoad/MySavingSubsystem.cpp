@@ -61,16 +61,21 @@ void UMySavingSubsystem::TryApplyAfterTravel()
 
     if (Player && Player->Inventory && PendingLoadedSave)
     {
-        // Successfully apply the loaded save
-        ApplyLoadedSave(PendingLoadedSave);
-        PendingLoadedSave = nullptr;
-        bApplyLoadAfterTravel = false;
-        
-        // Trigger save after successful load
-        PendingSaveRetries = 0;
-        World->GetTimerManager().SetTimerForNextTick(
-            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
-        return;
+        if (ApplyLoadedSave(PendingLoadedSave))
+        {
+            PendingLoadedSave = nullptr;
+            bApplyLoadAfterTravel = false;
+            PendingLoadRetries = 0;
+
+            // Schedule the save for next tick to ensure player is fully initialized
+            // This guarantees the new level name is saved
+            PendingSaveRetries = 0;
+            World->GetTimerManager().SetTimerForNextTick(
+                FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave failed; will retry."));
     }
 
     // Retry if we haven't exceeded max retries
@@ -227,6 +232,9 @@ bool UMySavingSubsystem::ApplyLoadedSave(UMySaveGame* LoadedSave)
 
 bool UMySavingSubsystem::SaveGame()
 {
+    FDateTime DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to save game: %s"), *DateTime.ToString());
+
     UMySaveGame* SaveGame = Cast<UMySaveGame>(
         UGameplayStatics::CreateSaveGameObject(UMySaveGame::StaticClass()));
     
@@ -345,11 +353,13 @@ bool UMySavingSubsystem::SaveGame()
     
     if (bSuccess)
     {
-        UE_LOG(LogTemp, Log, TEXT("Game saved successfully"));
+        DateTime = FDateTime::Now();
+        UE_LOG(LogTemp, Log, TEXT("Game saved successfully: %s"), *DateTime.ToString());
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to save game"));
+        DateTime = FDateTime::Now();
+        UE_LOG(LogTemp, Error, TEXT("Failed to save game: %s"), *DateTime.ToString());
     }
     
     return bSuccess;
@@ -357,6 +367,9 @@ bool UMySavingSubsystem::SaveGame()
 
 bool UMySavingSubsystem::LoadGame()
 {
+    FDateTime DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to load game: %s"), *DateTime.ToString());
+
     if (!DoesSaveExist()) { UE_LOG(LogTemp, Warning, TEXT("No save")); return false; }
 
     UMySaveGame* Loaded = Cast<UMySaveGame>(
@@ -372,6 +385,9 @@ bool UMySavingSubsystem::LoadGame()
     // Always travel (even if the current map is the same) so we respawn at level entry
     PendingLoadedSave     = Loaded;
     bApplyLoadAfterTravel = true;
+
+    DateTime = FDateTime::Now();
+    UE_LOG(LogTemp, Error, TEXT("Attempting to open level: %s"), *DateTime.ToString());
 
     UGameplayStatics::OpenLevel(GetWorld(), FName(*Loaded->CurrentLevelName));
     return true; // important: return immediately; old world is tearing down
@@ -402,16 +418,24 @@ bool UMySavingSubsystem::DeleteSave()
 void UMySavingSubsystem::OpenLevelWithCarryOver(FString LevelName)
 {
     // 1) Snapshot current player into the normal save slot
-    if (!SaveGame()) return;
+    if (!SaveGame()) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to save before level travel to %s"), *LevelName);
+        return;
+    }
 
     // 2) Keep it in memory and mark that we should apply after travel
     PendingLoadedSave = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
     
-    if (!PendingLoadedSave) { UE_LOG(LogTemp, Error, TEXT("Failed to load save game")); return; }
+    if (!PendingLoadedSave) 
+    { 
+        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to load save game into memory")); 
+        return; 
+    }
 
     PendingLoadedSave->CurrentLevelName = LevelName;
     bApplyLoadAfterTravel = true;
-
+    
     // 3) Travel
     UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName));
 }
