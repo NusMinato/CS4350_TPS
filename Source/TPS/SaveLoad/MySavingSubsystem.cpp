@@ -36,6 +36,9 @@ void UMySavingSubsystem::TrySaveAfterSpawn()
     if (!PlayerCharacter || !PlayerCharacter->Inventory) {
         
         if (++PendingSaveRetries < this->MaxPendingSaveRetries) {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SavingSubsystem] TrySaveAfterSpawn retry %d: Player not ready yet"),
+                PendingSaveRetries);
             World->GetTimerManager().SetTimerForNextTick(
                 FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
         }
@@ -48,6 +51,7 @@ void UMySavingSubsystem::TrySaveAfterSpawn()
         return;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TrySaveAfterSpawn: Player ready, calling SaveGame()"));
     SaveGame();
 }
 
@@ -61,16 +65,33 @@ void UMySavingSubsystem::TryApplyAfterTravel()
 
     if (Player && Player->Inventory && PendingLoadedSave)
     {
-        // Successfully apply the loaded save
-        ApplyLoadedSave(PendingLoadedSave);
-        PendingLoadedSave = nullptr;
-        bApplyLoadAfterTravel = false;
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TryApplyAfterTravel: Player and Inventory ready, applying save..."));
         
-        // Trigger save after successful load
-        PendingSaveRetries = 0;
-        World->GetTimerManager().SetTimerForNextTick(
-            FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
-        return;
+        if (ApplyLoadedSave(PendingLoadedSave))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave succeeded, clearing pending state"));
+            PendingLoadedSave = nullptr;
+            bApplyLoadAfterTravel = false;
+            PendingLoadRetries = 0;
+
+            // Schedule the save for next tick to ensure player is fully initialized
+            // This guarantees the new level name is saved
+            PendingSaveRetries = 0;
+            World->GetTimerManager().SetTimerForNextTick(
+                FTimerDelegate::CreateUObject(this, &UMySavingSubsystem::TrySaveAfterSpawn));
+            
+            UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Scheduled save for next tick after level travel"));
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] ApplyLoadedSave returned false; will retry."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] TryApplyAfterTravel: Player=%s, Inventory=%s, PendingLoadedSave=%s"),
+            Player ? TEXT("Valid") : TEXT("NULL"),
+            (Player && Player->Inventory) ? TEXT("Valid") : TEXT("NULL"),
+            PendingLoadedSave ? TEXT("Valid") : TEXT("NULL"));
     }
 
     // Retry if we haven't exceeded max retries
@@ -412,17 +433,34 @@ bool UMySavingSubsystem::DeleteSave()
 
 void UMySavingSubsystem::OpenLevelWithCarryOver(FString LevelName)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] OpenLevelWithCarryOver called for level: %s"), *LevelName);
+    
     // 1) Snapshot current player into the normal save slot
-    if (!SaveGame()) return;
+    if (!SaveGame()) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to save before level travel"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Pre-travel save succeeded, loading into memory..."));
 
     // 2) Keep it in memory and mark that we should apply after travel
     PendingLoadedSave = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
     
-    if (!PendingLoadedSave) { UE_LOG(LogTemp, Error, TEXT("Failed to load save game")); return; }
+    if (!PendingLoadedSave) 
+    { 
+        UE_LOG(LogTemp, Error, TEXT("[SavingSubsystem] Failed to load save game into memory")); 
+        return; 
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Loaded save from level: %s, updating to: %s"), 
+        *PendingLoadedSave->CurrentLevelName, *LevelName);
 
     PendingLoadedSave->CurrentLevelName = LevelName;
     bApplyLoadAfterTravel = true;
 
+    UE_LOG(LogTemp, Warning, TEXT("[SavingSubsystem] Opening level: %s"), *LevelName);
+    
     // 3) Travel
     UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName));
 }
