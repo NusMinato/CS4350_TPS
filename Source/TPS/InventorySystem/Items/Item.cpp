@@ -2,6 +2,7 @@
 
 
 #include "Item.h"
+#include "./InventoryComponent.h"
 
 UItem::UItem() {
 	this->ItemDisplayName = FText::FromString("Item");
@@ -10,6 +11,7 @@ UItem::UItem() {
 
 void UItem::Use(APlayerCharacter* Character)
 {
+	this->OnUse(Character);
 }
 
 bool UItem::CanStackWith(const UItem* OtherItem) const
@@ -54,5 +56,7 @@ bool UItem::RemoveQuantity(int32 Amount)
 	}
 
 	Quantity -= Amount;
+	this->OwningInventory->OnInventoryUpdated.Broadcast();
+	
 	return true;
 }
