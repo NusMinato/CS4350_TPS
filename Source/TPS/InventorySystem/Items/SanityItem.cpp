@@ -16,6 +16,7 @@ USanityItem::USanityItem()
 
 void USanityItem::Use(APlayerCharacter* PlayerCharacter)
 {
+
 	if (!PlayerCharacter || Quantity <= 0)
 	{
 		return;
@@ -26,7 +27,7 @@ void USanityItem::Use(APlayerCharacter* PlayerCharacter)
 	PlayerCharacter->SetSanity(FMath::Min(NewSanity, PlayerCharacter->MaxSanity));
 
 	// Decrease quantity
-	Quantity--;
+	this->RemoveQuantity(1);
 	
 	UE_LOG(LogTemp, Log, TEXT("Used Sanity Potion. Remaining: %d"), Quantity);
 
