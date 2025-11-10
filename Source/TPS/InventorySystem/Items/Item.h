@@ -29,9 +29,6 @@ public:
 	FText UseActionText;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-	TObjectPtr<UStaticMesh> PickupMesh;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
 	TObjectPtr<UTexture2D> Thumbnail;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")

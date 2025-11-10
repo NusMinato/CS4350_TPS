@@ -15,6 +15,7 @@ UHealItem::UHealItem()
 
 void UHealItem::Use(APlayerCharacter* PlayerCharacter)
 {
+
 	if (!PlayerCharacter || Quantity <= 0)
 	{
 		return;
@@ -25,7 +26,7 @@ void UHealItem::Use(APlayerCharacter* PlayerCharacter)
 	PlayerCharacter->SetHealth(FMath::Min(NewHealth, PlayerCharacter->MaxHealth));
 
 	// Decrease quantity
-	Quantity--;
+	this->RemoveQuantity(1);
 	
 	UE_LOG(LogTemp, Log, TEXT("Used Health Potion. Remaining: %d"), Quantity);
 

@@ -20,14 +20,11 @@ public:
 	// Sets default values for this actor's properties
 	AItemPickUpWrapper();
 
-
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Item")
 	UItem* WrappedItem = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	bool bAutoPickUp = false;
-
-
 
 	UFUNCTION(BlueprintCallable)
 	void OnPickUp(APlayerCharacter* PlayerCharacter);
