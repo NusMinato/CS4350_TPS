@@ -8,3 +8,8 @@
 AWeaponActor::AWeaponActor()
 {
 }
+
+void AWeaponActor::BroadcastReloadComplete()
+{
+	OnReloadComplete.Broadcast();
+}

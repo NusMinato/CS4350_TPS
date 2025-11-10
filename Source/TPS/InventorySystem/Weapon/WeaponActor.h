@@ -11,6 +11,8 @@
 class APlayerCharacter;
 class UWeaponItem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReloadComplete);
+
 UCLASS(BlueprintType, Blueprintable)
 class TPS_API AWeaponActor : public AActor, public IWeapon
 {
@@ -43,4 +45,10 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Weapon")
 	void Drop();
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnReloadComplete OnReloadComplete;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void BroadcastReloadComplete();
 };
