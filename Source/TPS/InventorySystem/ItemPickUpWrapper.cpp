@@ -15,7 +15,6 @@ AItemPickUpWrapper::AItemPickUpWrapper()
     this->PickupCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     this->PickupCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     this->PickupCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    this->PickupCollision->SetGenerateOverlapEvents(true);
     this->RootComponent = this->PickupCollision;
 }
 

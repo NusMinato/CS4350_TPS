@@ -275,15 +275,6 @@ void APlayerCharacter::Interact()
     {
         IInteractable::Execute_Interact(Hit.GetActor(), this);
     }
-
-#if !(UE_BUILD_SHIPPING)
-    // Debug visualization
-    DrawDebugLine(GetWorld(), WorldOrigin, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 1.5f);
-    if (bHit)
-    {
-        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 10.f, 12, FColor::Orange, false, 1.f, 0, 2.f);
-    }
-#endif
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -325,8 +316,8 @@ void APlayerCharacter::UpdateInteractionFocus()
     PC->GetViewportSize(ViewportW, ViewportH);
     const FVector2D ScreenCenter(ViewportW * 0.5f, ViewportH * 0.5f);
 
-    FVector WorldOrigin, WorldDir;
-    if (!PC->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldOrigin, WorldDir))
+    FVector CameraOrigin, WorldDir;
+    if (!PC->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, CameraOrigin, WorldDir))
     {
         // Clear focus if deprojection fails
         if (FocusedItem != nullptr)
@@ -338,7 +329,9 @@ void APlayerCharacter::UpdateInteractionFocus()
         return;
     }
 
-    const FVector End = WorldOrigin + WorldDir * InteractRange;
+    // Start from player position, not camera, to avoid detecting objects behind player
+    const FVector StartLocation = GetActorLocation();
+    const FVector End = StartLocation + WorldDir * InteractRange;
 
     // Setup collision query params
     FCollisionQueryParams Params(SCENE_QUERY_STAT(UpdateInteractionFocus), /*bTraceComplex=*/false, this);
@@ -351,11 +344,11 @@ void APlayerCharacter::UpdateInteractionFocus()
     FCollisionObjectQueryParams ObjTypes;
     ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
 
-    // Sphere sweep from center of screen
+    // Sphere sweep from player position in screen center direction
     FHitResult Hit;
     bool bHit = GetWorld()->SweepSingleByObjectType(
         Hit, 
-        WorldOrigin, 
+        StartLocation, 
         End, 
         FQuat::Identity,
         ObjTypes, 
