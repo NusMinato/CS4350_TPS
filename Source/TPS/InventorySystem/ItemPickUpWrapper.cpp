@@ -15,8 +15,17 @@ AItemPickUpWrapper::AItemPickUpWrapper()
     this->PickupCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     this->PickupCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     this->PickupCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    this->PickupCollision->SetGenerateOverlapEvents(true);
     this->RootComponent = this->PickupCollision;
+
+    // Create widget component for interaction prompt
+    this->InteractWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractWidget"));
+    this->InteractWidget->SetupAttachment(RootComponent);
+    this->InteractWidget->SetWidgetSpace(EWidgetSpace::Screen);
+    this->InteractWidget->SetDrawSize(FVector2D(200.f, 50.f));
+    this->InteractWidget->SetVisibility(false); // Hidden by default
+    
+    // Enable tick to check if player is looking at this item
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 void AItemPickUpWrapper::BeginPlay() {
@@ -26,6 +35,37 @@ void AItemPickUpWrapper::BeginPlay() {
         this->PickupCollision->OnComponentBeginOverlap.AddDynamic(
             this, &AItemPickUpWrapper::OnOverlapBegin
         );
+    }
+
+    // Make sure widget is hidden at start
+    if (InteractWidget)
+    {
+        InteractWidget->SetVisibility(false);
+    }
+}
+
+void AItemPickUpWrapper::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    // Check if player is focusing on this item
+    APlayerCharacter* Player = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+    if (Player && InteractWidget)
+    {
+        // Show widget if this is the focused item, hide otherwise
+        bool bShouldShow = (Player->FocusedItem == this);
+        if (InteractWidget->IsVisible() != bShouldShow)
+        {
+            InteractWidget->SetVisibility(bShouldShow);
+        }
+    }
+}
+
+void AItemPickUpWrapper::SetWidgetVisibility(bool bVisible)
+{
+    if (InteractWidget)
+    {
+        InteractWidget->SetVisibility(bVisible);
     }
 }
 
