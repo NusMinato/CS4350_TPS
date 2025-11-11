@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "./Items/Interactable.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "ItemPickUpWrapper.generated.h"
 
 class UItem;
@@ -41,9 +42,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	USphereComponent* PickupCollision;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	UWidgetComponent* InteractWidget;
+
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Interface implementation for interacting (picking up) */
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;
 	virtual FText GetInteractText_Implementation() const override;
+
+	/** Show or hide the interaction widget */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void SetWidgetVisibility(bool bVisible);
 };

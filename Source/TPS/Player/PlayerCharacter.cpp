@@ -369,4 +369,13 @@ void APlayerCharacter::UpdateInteractionFocus()
         OnInteractionFocusChanged.Broadcast(FocusedItem);
         BP_OnInteractionFocusChanged(FocusedItem);
     }
+
+#if !(UE_BUILD_SHIPPING)
+    // Debug visualization
+    DrawDebugLine(GetWorld(), StartLocation, End, bHit ? FColor::Green : FColor::Red, false, 0.1f, 0, 2.f);
+    if (bHit)
+    {
+        DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 15.f, 12, FColor::Orange, false, 0.1f, 0, 2.f);
+    }
+#endif
 }
