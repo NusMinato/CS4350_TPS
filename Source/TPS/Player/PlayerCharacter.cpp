@@ -20,6 +20,11 @@ APlayerCharacter::APlayerCharacter()
     Inventory->Capacity = 20;
     CurrHealth = MaxHealth;
     CurrSanity = MaxSanity;
+    FocusedItem = nullptr;
+    
+    // Enable tick for continuous interaction detection
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickInterval = 0.1f; // Check every 0.1 seconds (10 times per second)
 }
 
 void APlayerCharacter::UseItem(UItem* Item)
@@ -287,4 +292,88 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     
     // Bind Interact action (F key)
     PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+}
+
+void APlayerCharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    
+    // Continuously update interaction focus
+    UpdateInteractionFocus();
+}
+
+void APlayerCharacter::UpdateInteractionFocus()
+{
+    constexpr float InteractRange  = 500.f;
+    constexpr float InteractRadius = 80.f;
+
+    // Get center-of-screen direction
+    APlayerController* PC = GetController<APlayerController>();
+    if (!PC) 
+    {
+        // Clear focus if no controller
+        if (FocusedItem != nullptr)
+        {
+            FocusedItem = nullptr;
+            OnInteractionFocusChanged.Broadcast(nullptr);
+            BP_OnInteractionFocusChanged(nullptr);
+        }
+        return;
+    }
+
+    int32 ViewportW = 0, ViewportH = 0;
+    PC->GetViewportSize(ViewportW, ViewportH);
+    const FVector2D ScreenCenter(ViewportW * 0.5f, ViewportH * 0.5f);
+
+    FVector WorldOrigin, WorldDir;
+    if (!PC->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldOrigin, WorldDir))
+    {
+        // Clear focus if deprojection fails
+        if (FocusedItem != nullptr)
+        {
+            FocusedItem = nullptr;
+            OnInteractionFocusChanged.Broadcast(nullptr);
+            BP_OnInteractionFocusChanged(nullptr);
+        }
+        return;
+    }
+
+    const FVector End = WorldOrigin + WorldDir * InteractRange;
+
+    // Setup collision query params
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(UpdateInteractionFocus), /*bTraceComplex=*/false, this);
+    Params.AddIgnoredActor(this);
+    TArray<AActor*> AttachedActors;
+    GetAttachedActors(AttachedActors);
+    Params.AddIgnoredActors(AttachedActors);
+
+    // Object types to interact with
+    FCollisionObjectQueryParams ObjTypes;
+    ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+    // Sphere sweep from center of screen
+    FHitResult Hit;
+    bool bHit = GetWorld()->SweepSingleByObjectType(
+        Hit, 
+        WorldOrigin, 
+        End, 
+        FQuat::Identity,
+        ObjTypes, 
+        FCollisionShape::MakeSphere(InteractRadius), 
+        Params
+    );
+
+    AActor* NewFocusedItem = nullptr;
+    if (bHit && Hit.GetActor() && Hit.GetActor()->Implements<UInteractable>())
+    {
+        NewFocusedItem = Hit.GetActor();
+    }
+
+    // Only update and broadcast if the focused item changed
+    if (NewFocusedItem != FocusedItem)
+    {
+        FocusedItem = NewFocusedItem;
+        OnInteractionFocusChanged.Broadcast(FocusedItem);
+        BP_OnInteractionFocusChanged(FocusedItem);
+    }
 }
