@@ -83,10 +83,10 @@ FText AItemPickUpWrapper::GetInteractText_Implementation() const
 {
     if (this->WrappedItem)
     {
-        // e.g. "Press E to pick up Pistol"
+        // e.g. "Press F to pick up Pistol"
         FText itemName = this->WrappedItem->ItemDisplayName;
-        return FText::Format(NSLOCTEXT("Interact", "PickupPrompt", "Press E to pick up {0}"), itemName);
+        return FText::Format(NSLOCTEXT("Interact", "PickupPrompt", "Press F to pick up {0}"), itemName);
     }
     // Default text if no item data
-    return FText::FromString("Press E to interact");
+    return FText::FromString("Press F to interact");
 }

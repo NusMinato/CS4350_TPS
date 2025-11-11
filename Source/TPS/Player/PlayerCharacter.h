@@ -13,6 +13,7 @@ class UWeaponItem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedWeaponUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActiveWeaponUnequipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractionFocusChanged, AActor*, FocusedInteractable);
 
 UCLASS()
 class TPS_API APlayerCharacter : public ACharacter
@@ -64,6 +65,10 @@ public:
 	// Function to perform interaction trace and handle results
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void Interact();
+
+	// Function to update the currently focused interactable (called continuously)
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void UpdateInteractionFocus();
 
 	UFUNCTION(BlueprintCallable)
 	void UseItem(UItem* Item);
@@ -125,8 +130,17 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnActiveWeaponUnequipped OnActiveWeaponUnequipped;
 
+	// Delegate called when the focused interactable changes (for UI updates)
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnInteractionFocusChanged OnInteractionFocusChanged;
+
+	// Blueprint event for when interaction focus changes (alternative to delegate)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
+	void BP_OnInteractionFocusChanged(AActor* FocusedInteractable);
+
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(float DeltaTime) override;
 
 private:
 	/** Cache so we only update UI when the focused actor changes */
