@@ -41,7 +41,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	USphereComponent* PickupCollision;
 
-
 public:
 	/** Interface implementation for interacting (picking up) */
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;

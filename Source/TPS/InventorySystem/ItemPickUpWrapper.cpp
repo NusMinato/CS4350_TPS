@@ -15,8 +15,10 @@ AItemPickUpWrapper::AItemPickUpWrapper()
     this->PickupCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     this->PickupCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     this->PickupCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    this->PickupCollision->SetGenerateOverlapEvents(true);
     this->RootComponent = this->PickupCollision;
+    
+    // Enable tick to check if player is looking at this item
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 void AItemPickUpWrapper::BeginPlay() {
@@ -27,6 +29,8 @@ void AItemPickUpWrapper::BeginPlay() {
             this, &AItemPickUpWrapper::OnOverlapBegin
         );
     }
+
+    // Make sure widget is hidden at start
 }
 
 void AItemPickUpWrapper::OnPickUp(APlayerCharacter* PlayerCharacter)
