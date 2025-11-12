@@ -230,7 +230,7 @@ void APlayerCharacter::SetActiveWeapon(UWeaponItem* WeaponItem)
 void APlayerCharacter::Interact()
 {
     constexpr float InteractRange  = 500.f;
-    constexpr float InteractRadius = 80.f;
+    constexpr float InteractRadius = 30.f;
 
     // Get center-of-screen direction
     APlayerController* PC = GetController<APlayerController>();
@@ -259,10 +259,11 @@ void APlayerCharacter::Interact()
     FCollisionObjectQueryParams ObjTypes;
     ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
 
-    // Sphere sweep from center of screen - more forgiving for interaction
-    FHitResult Hit;
-    bool bHit = GetWorld()->SweepSingleByObjectType(
-        Hit, 
+    // Multi-sweep to get all hits, then select the closest interactable
+    // This prevents interacting with the wrong item when multiple interactables are present
+    TArray<FHitResult> Hits;
+    bool bHit = GetWorld()->SweepMultiByObjectType(
+        Hits, 
         WorldOrigin, 
         End, 
         FQuat::Identity,
@@ -271,9 +272,29 @@ void APlayerCharacter::Interact()
         Params
     );
 
-    if (bHit && Hit.GetActor() && Hit.GetActor()->Implements<UInteractable>())
+    if (bHit && Hits.Num() > 0)
     {
-        IInteractable::Execute_Interact(Hit.GetActor(), this);
+        // Find the closest interactable item
+        AActor* ClosestInteractable = nullptr;
+        float ClosestDistance = MAX_FLT;
+        for (const FHitResult& Hit : Hits)
+        {
+            AActor* HitActor = Hit.GetActor();
+            if (HitActor && HitActor->Implements<UInteractable>())
+            {
+                float Distance = FVector::Dist(WorldOrigin, Hit.Location);
+                if (Distance < ClosestDistance)
+                {
+                    ClosestDistance = Distance;
+                    ClosestInteractable = HitActor;
+                }
+            }
+        }
+
+        if (ClosestInteractable)
+        {
+            IInteractable::Execute_Interact(ClosestInteractable, this);
+        }
     }
 }
 
@@ -296,7 +317,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 void APlayerCharacter::UpdateInteractionFocus()
 {
     constexpr float InteractRange  = 500.f;
-    constexpr float InteractRadius = 80.f;
+    constexpr float InteractRadius = 30.f;
 
     // Get center-of-screen direction
     APlayerController* PC = GetController<APlayerController>();
@@ -344,10 +365,11 @@ void APlayerCharacter::UpdateInteractionFocus()
     FCollisionObjectQueryParams ObjTypes;
     ObjTypes.AddObjectTypesToQuery(ECC_WorldDynamic);
 
-    // Sphere sweep from player position in screen center direction
-    FHitResult Hit;
-    bool bHit = GetWorld()->SweepSingleByObjectType(
-        Hit, 
+    // Multi-sweep to get all hits, then select the closest interactable
+    // This prevents flickering when multiple interactables are present
+    TArray<FHitResult> Hits;
+    bool bHit = GetWorld()->SweepMultiByObjectType(
+        Hits, 
         StartLocation, 
         End, 
         FQuat::Identity,
@@ -357,9 +379,23 @@ void APlayerCharacter::UpdateInteractionFocus()
     );
 
     AActor* NewFocusedItem = nullptr;
-    if (bHit && Hit.GetActor() && Hit.GetActor()->Implements<UInteractable>())
+    if (bHit && Hits.Num() > 0)
     {
-        NewFocusedItem = Hit.GetActor();
+        // Find the closest interactable item
+        float ClosestDistance = MAX_FLT;
+        for (const FHitResult& Hit : Hits)
+        {
+            AActor* HitActor = Hit.GetActor();
+            if (HitActor && HitActor->Implements<UInteractable>())
+            {
+                float Distance = FVector::Dist(StartLocation, Hit.Location);
+                if (Distance < ClosestDistance)
+                {
+                    ClosestDistance = Distance;
+                    NewFocusedItem = HitActor;
+                }
+            }
+        }
     }
 
     // Only update and broadcast if the focused item changed
